@@ -12,6 +12,9 @@
         "clue/socks-react": "^1.0",
         "ext-pcntl": "*"
     },
+    "require-dev": {
+        "symplify/easy-coding-standard": "^7.2"
+    },
     "autoload": {
         "psr-4": {
             "App\\": "src/"
@@ -19,5 +22,10 @@
         "files": [
             "src/functions.php"
         ]
+    },
+    "scripts": {
+        "run-app": "php src/run.php",
+        "test:ecs": "vendor/bin/ecs check",
+        "fix:ecs": "vendor/bin/ecs check --fix"
     }
 }

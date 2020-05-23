@@ -1,0 +1,7 @@
+parameters:
+  sets:
+    - 'symfony'
+  skip:
+    PhpCsFixer\Fixer\Phpdoc\PhpdocVarWithoutNameFixer: ~
+  paths:
+    - 'src'
