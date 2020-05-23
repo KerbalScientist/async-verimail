@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\SmtpVerifier;
-
 
 use App\Mutex;
 use App\SmtpVerifier\ConnectionInterface as VerifierConnectionInterface;
@@ -40,18 +38,17 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
     /**
      * Connector constructor.
      *
-     * @param ResolverInterface $resolver
+     * @param ResolverInterface  $resolver
      * @param ConnectorInterface $connector
-     * @param Mutex $mutex
-     * @param array $connectionSettings
+     * @param Mutex              $mutex
+     * @param array              $connectionSettings
      */
     public function __construct(
         ResolverInterface $resolver,
         ConnectorInterface $connector,
         Mutex $mutex,
         array $connectionSettings = []
-    )
-    {
+    ) {
         $this->resolver = $resolver;
         $this->connector = $connector;
         $this->mutex = $mutex;
@@ -60,7 +57,7 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      *
      * @todo Refactor. Move MX server connection creation to separate socket connector.
      */
@@ -74,27 +71,30 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
                  * @todo Extract method.
                  */
                 $mxHosts = array_column($records, self::MX_DOMAIN_COLUMN);
-                $this->logger->debug("MX hosts found for $hostname: " . implode(', ', $mxHosts));
+                $this->logger->debug("MX hosts found for $hostname: ".implode(', ', $mxHosts));
                 $socketConnection = null;
                 $result = null;
                 foreach ($mxHosts as $mxHost) {
                     if ($result) {
                         $result = $result->then(null, function (Throwable $e) use ($hostname, $mxHost) {
-                            $this->logger->debug("$hostname MX - unable to connect to $mxHost" . ':' . self::MX_PORT
-                                . ". {$e->getMessage()}");
-                            return $this->connector->connect($mxHost . ':' . self::MX_PORT);
+                            $this->logger->debug("$hostname MX - unable to connect to $mxHost".':'.self::MX_PORT
+                                .". {$e->getMessage()}");
+
+                            return $this->connector->connect($mxHost.':'.self::MX_PORT);
                         });
                     } else {
-                        $result = $this->connector->connect($mxHost . ':' . self::MX_PORT);
+                        $result = $this->connector->connect($mxHost.':'.self::MX_PORT);
                     }
                 }
+
                 return $result;
             })
             ->then(null, function (Throwable $e) use ($hostname) {
                 if ($e instanceof NoMxRecordsException) {
                     throw $e;
                 }
-                throw new RuntimeException("Unable to connect to any MX server.", 0, $e);
+
+                throw new RuntimeException('Unable to connect to any MX server.', 0, $e);
             })
             ->then(function ($result) use ($hostname) {
                 if ($result instanceof VerifierConnectionInterface) {
@@ -102,11 +102,11 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
                 }
                 if (!$result instanceof SocketConnectionInterface) {
                     return reject(new InvalidArgumentException(
-                        'Result must implement ' . SocketConnectionInterface::class .
-                        ' or ' . VerifierConnectionInterface::class . '.'));
+                        'Result must implement '.SocketConnectionInterface::class.
+                        ' or '.VerifierConnectionInterface::class.'.'));
                 }
                 $socketConnection = $result;
-                $this->logger->debug("$hostname MX - connected to host" .
+                $this->logger->debug("$hostname MX - connected to host".
                     " {$socketConnection->getRemoteAddress()} from {$socketConnection->getLocalAddress()}.");
                 $settings = $this->connectionSettings['*'] ?? [];
                 if (isset($this->connectionSettings[$hostname])) {
@@ -114,6 +114,7 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
                 }
                 $connection = new Connection($socketConnection, $this->mutex, $hostname, $settings);
                 $connection->setLogger($this->logger);
+
                 return $connection;
             });
     }
@@ -135,8 +136,10 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
             if ($error) {
                 throw $error;
             }
+
             return $result;
         };
+
         return $this->resolver->resolveAll($hostname, Message::TYPE_MX)
             ->then($callback, $callback);
     }

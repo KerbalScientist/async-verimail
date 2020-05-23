@@ -5,13 +5,10 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\SmtpVerifier;
-
 
 use RuntimeException;
 
 class ConnectionClosedException extends RuntimeException
 {
-
 }

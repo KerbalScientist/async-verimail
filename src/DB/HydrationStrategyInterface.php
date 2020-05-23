@@ -5,25 +5,25 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\DB;
-
 
 interface HydrationStrategyInterface
 {
     /**
      * Creates entity object from DB row.
      *
-     * @param array $row DB row.
-     * @return object Entity object.
+     * @param array $row DB row
+     *
+     * @return object entity object
      */
     public function hydrate(array $row): object;
 
     /**
      * Creates DB row from entity object.
      *
-     * @param object $entity Entity object.
-     * @return array DB row.
+     * @param object $entity entity object
+     *
+     * @return array DB row
      */
     public function dehydrate(object $entity): array;
 }

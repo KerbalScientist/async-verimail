@@ -7,9 +7,7 @@
 
 /** @noinspection PhpUnused */
 
-
 namespace App\Stream;
-
 
 use React\Promise\PromiseInterface;
 
@@ -22,7 +20,8 @@ trait ReadableStreamIteratorTrait
     private bool $valid = true;
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
+     *
      * @return PromiseInterface
      */
     public function current()
@@ -30,11 +29,12 @@ trait ReadableStreamIteratorTrait
         if (!isset($this->current)) {
             $this->next();
         }
+
         return $this->current;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function next()
     {
@@ -46,7 +46,7 @@ trait ReadableStreamIteratorTrait
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function valid()
     {
@@ -54,7 +54,8 @@ trait ReadableStreamIteratorTrait
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
+     *
      * @return int
      */
     public function key()

@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\Stream;
-
 
 use Exception;
 use React\Promise\Deferred;
@@ -23,7 +21,7 @@ trait ReadableStreamPromisorTrait
     /**
      * PromisorReadableStreamTrait constructor.
      *
-     * @param int $bufferSize
+     * @param int  $bufferSize
      * @param bool $singleDataArg
      * @noinspection PhpUnused
      */
@@ -35,7 +33,7 @@ trait ReadableStreamPromisorTrait
     /**
      * Initialises functionality of this trait. Should be called from constructor.
      *
-     * @param int $bufferSoftSize
+     * @param int  $bufferSoftSize
      * @param bool $singleDataArg
      */
     protected function initPromisor(int $bufferSoftSize, $singleDataArg = false): void
@@ -83,6 +81,7 @@ trait ReadableStreamPromisorTrait
             $this->resume();
         }
         $deferred = array_shift($this->returnQueue);
+
         return $deferred->promise();
     }
 

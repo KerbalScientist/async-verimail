@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App;
-
 
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
@@ -22,7 +20,7 @@ class LevelFilteringLogger extends AbstractLogger implements LoggerInterface
      * LevelFilteringLogger constructor.
      *
      * @param LoggerInterface $innerLogger
-     * @param array $showLevels
+     * @param array           $showLevels
      */
     public function __construct(LoggerInterface $innerLogger, ?array $showLevels = null)
     {
@@ -46,11 +44,12 @@ class LevelFilteringLogger extends AbstractLogger implements LoggerInterface
     {
         $logger = clone $this;
         $logger->showLevels = array_diff_key($this->showLevels, array_flip($levels));
+
         return $logger;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function log($level, $message, array $context = array())
     {

@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App;
-
 
 use App\Entity\Email;
 use App\Entity\VerifyStatus;
@@ -48,9 +46,9 @@ class Verifier implements LoggerAwareInterface
      * Verifier constructor.
      *
      * @param ConnectorInterface $verifierConnector
-     * @param Mutex $mutex
-     * @param array $settings
-     *              $settings['maxConcurrent'] - maximum concurrent verifications.
+     * @param Mutex              $mutex
+     * @param array              $settings
+     *                                              $settings['maxConcurrent'] - maximum concurrent verifications
      */
     public function __construct(ConnectorInterface $verifierConnector, Mutex $mutex, array $settings = [])
     {
@@ -101,21 +99,22 @@ class Verifier implements LoggerAwareInterface
      * Creates stream, that verifies, sets `Email::$s_status` property and passes `Email` entities through.
      *
      * @param LoopInterface $loop
-     * @param array $pipeOptions Options, passed to `App::pipeThrough()`
+     * @param array         $pipeOptions Options, passed to `App::pipeThrough()`
+     *
      * @return DuplexStreamInterface<Email>
      */
     public function createVerifyingStream(LoopInterface $loop, $pipeOptions = []): DuplexStreamInterface
     {
-
         $through = function (Email $email) {
             return $this->verify($email, function (Email $email, ?VerifyStatus $status) {
                 if (!is_null($status)) {
                     $email->s_status = $status;
                 }
+
                 return resolve($email);
             });
         };
-        /**
+        /*
          * @todo Remove debug $through.
          */
 //        $through = function (Email $email) {
@@ -136,17 +135,20 @@ class Verifier implements LoggerAwareInterface
         );
         $result = new CompositeStream($resolvingStream, $collectingStream);
         $collectingStream->removeListener('close', [$result, 'close']);
+
         return $result;
     }
 
     public function verify(Email $email, callable $statusCallback): PromiseInterface
     {
         $this->logger->info("Verifying $email->m_mail");
-        if (filter_var($email->m_mail, FILTER_VALIDATE_EMAIL) === false) {
+        if (false === filter_var($email->m_mail, FILTER_VALIDATE_EMAIL)) {
             $this->logger->info("$email->m_mail is invalid.");
+
             return $statusCallback($email, VerifyStatus::INVALID());
         }
         $hostname = explode('@', $email->m_mail)[1];
+
         return $this->verifierConnector->connect($hostname)
             ->then(function (ConnectionInterface $connection) {
                 return all([
@@ -157,25 +159,30 @@ class Verifier implements LoggerAwareInterface
             ->then(function ($results) use ($statusCallback, $email) {
                 if (!$results['isReliable']) {
                     $this->logger->info("Cannot verify $email->m_mail. Unreliable server.");
+
                     return $statusCallback($email, VerifyStatus::SMTP_CHECK_IMPOSSIBLE());
                 }
+
                 return $results['connection'];
             })
             ->then(function ($result) use ($email) {
                 if (!$result instanceof ConnectionInterface) {
                     return $result;
                 }
+
                 return $result->sendVerifyRecipient($email->m_mail);
             })
             ->then(function ($message) use ($statusCallback, $email) {
                 if (!$message instanceof Message) {
                     return $message;
                 }
-                if ($message->rcode === Message::RCODE_OK) {
+                if (Message::RCODE_OK === $message->rcode) {
                     $this->logger->info("$email->m_mail verified.");
+
                     return $statusCallback($email, VerifyStatus::SMTP_VERIFIED());
                 } else {
                     $this->logger->info("$email->m_mail NOT verified.");
+
                     return $statusCallback($email, VerifyStatus::SMTP_USER_NOT_FOUND());
                 }
             })
@@ -186,9 +193,11 @@ class Verifier implements LoggerAwareInterface
 
     /**
      * @param Throwable $e
-     * @param Email $email
-     * @param callable $statusCallback
+     * @param Email     $email
+     * @param callable  $statusCallback
+     *
      * @return PromiseInterface
+     *
      * @throws Throwable
      */
     private function handleThrowable(Throwable $e, Email $email, callable $statusCallback): PromiseInterface
@@ -202,16 +211,18 @@ class Verifier implements LoggerAwareInterface
             } else {
                 $this->logger->info("{$data['text']} $email->m_mail.");
             }
-            /**
+            /*
              * Clue\React\Socks\Client Exception manipulation bug workaround.
              */
             if ($e->getPrevious()
-                && strpos($e->getPrevious()->getMessage(), 'connection to proxy failed') !== false) {
+                && false !== strpos($e->getPrevious()->getMessage(), 'connection to proxy failed')) {
                 throw $e;
             }
             $this->logger->debug("$e");
+
             return $statusCallback($email, $data['status']);
         }
+
         throw $e;
     }
 }

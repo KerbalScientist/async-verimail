@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\SmtpVerifier;
-
 
 use Evenement\EventEmitterTrait;
 use React\Promise\PromiseInterface;
@@ -18,7 +16,7 @@ class UnreliableConnection implements ConnectionInterface
     use EventEmitterTrait;
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function isBusy(): bool
     {
@@ -26,7 +24,7 @@ class UnreliableConnection implements ConnectionInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function sendVerifyRecipient(string $email): PromiseInterface
     {
@@ -34,7 +32,7 @@ class UnreliableConnection implements ConnectionInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function isReliable(): PromiseInterface
     {
@@ -42,7 +40,7 @@ class UnreliableConnection implements ConnectionInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function close(): void
     {

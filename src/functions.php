@@ -5,7 +5,6 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App;
 
 use React\Stream\DuplexStreamInterface;
@@ -16,7 +15,7 @@ use React\Stream\WritableStreamInterface;
  * @param ReadableStreamInterface $source
  * @param WritableStreamInterface $target
  * @param DuplexStreamInterface[] $through
- * @param array $options
+ * @param array                   $options
  */
 function pipeThrough(ReadableStreamInterface $source, array $through, WritableStreamInterface $target, $options = [])
 {
@@ -43,4 +42,3 @@ function pipeThrough(ReadableStreamInterface $source, array $through, WritableSt
         $current = $item;
     }
 }
-

@@ -8,7 +8,6 @@
 
 namespace App\Stream;
 
-
 use React\Stream\DuplexStreamInterface;
 
 /**
@@ -20,20 +19,19 @@ use React\Stream\DuplexStreamInterface;
  * Buffer volume is limited by memory size.
  *
  * @see \React\Stream\ThroughStream
- *
- * @package App\Stream
  */
 class CollectingThroughStream implements DuplexStreamInterface
 {
     use BufferedThroughStreamTrait;
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function writeToBuffer($data): bool
     {
         $this->buffer[] = $data;
         $this->flush();
+
         return !count($this->buffer);
     }
 }

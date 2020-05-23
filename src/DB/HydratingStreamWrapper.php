@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\DB;
-
 
 use App\Stream\ReadableStreamWrapperTrait;
 use React\Stream\ReadableStreamInterface;
@@ -20,7 +18,8 @@ class HydratingStreamWrapper implements ReadableStreamInterface
 
     /**
      * HydratingStream constructor.
-     * @param ReadableStreamInterface $innerStream
+     *
+     * @param ReadableStreamInterface    $innerStream
      * @param HydrationStrategyInterface $hydrationStrategy
      */
     public function __construct(ReadableStreamInterface $innerStream, HydrationStrategyInterface $hydrationStrategy)
@@ -30,11 +29,12 @@ class HydratingStreamWrapper implements ReadableStreamInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function filterData(...$args): ?array
     {
         $row = array_shift($args);
+
         return [$this->hydrationStrategy->hydrate($row)];
     }
 }

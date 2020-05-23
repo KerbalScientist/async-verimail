@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App;
-
 
 use Closure;
 use React\EventLoop\LoopInterface;
@@ -38,6 +36,7 @@ class Mutex
 
     /**
      * Mutex constructor.
+     *
      * @param LoopInterface $eventLoop
      */
     public function __construct(LoopInterface $eventLoop)
@@ -59,13 +58,15 @@ class Mutex
         }
         $this->queues[$mutexKey]->enqueue([$callback, $args, $deferred]);
         $this->runTickFunction($mutexKey);
+
         return $deferred->promise();
     }
 
     /**
-     * Converts any value to
+     * Converts any value to.
      *
      * @param mixed $mixedKey
+     *
      * @return string
      */
     public function getMutexKey($mixedKey): string
@@ -74,10 +75,10 @@ class Mutex
             return "#str:$mixedKey";
         }
         if (is_object($mixedKey)) {
-            return '#object:' . spl_object_hash($mixedKey);
+            return '#object:'.spl_object_hash($mixedKey);
         }
         if (is_resource($mixedKey)) {
-            return '#resource:' . get_resource_type($mixedKey) . ':' . strval(intval($mixedKey));
+            return '#resource:'.get_resource_type($mixedKey).':'.strval(intval($mixedKey));
         }
         if (is_array($mixedKey)) {
             $result = '';
@@ -87,9 +88,11 @@ class Mutex
                 }
                 $result .= "$key:{$this->getMutexKey($value)}";
             }
-            return '[' . $result . ']';
+
+            return '['.$result.']';
         }
-        return '#sz:' . serialize($mixedKey);
+
+        return '#sz:'.serialize($mixedKey);
     }
 
     private function runTickFunction(string $mutexKey)
@@ -104,20 +107,23 @@ class Mutex
             }
             if (!$queue || !$queue->count()) {
                 unset($this->tickCallbacks[$mutexKey]);
+
                 return;
             }
             $current = $queue->dequeue();
             /**
              * @var $callback callable
-             * @var $args array
+             * @var $args     array
              * @var $deferred Deferred
              */
             list($callback, $args, $deferred) = $current;
+
             try {
                 $result = $callback(...$args);
             } catch (Throwable $e) {
                 $this->futureTick($mutexKey);
                 $deferred->reject($e);
+
                 return;
             }
             if (!$result instanceof PromiseInterface) {
@@ -131,7 +137,6 @@ class Mutex
                     $this->futureTick($mutexKey);
                     $deferred->reject($e);
                 });
-
         };
         ($this->tickCallbacks[$mutexKey])();
     }
@@ -145,7 +150,8 @@ class Mutex
 
     /**
      * @param Closure $closure
-     * @param mixed ...$args
+     * @param mixed   ...$args
+     *
      * @return PromiseInterface
      */
     public function runOnceForClosure(Closure $closure, ...$args): PromiseInterface
@@ -161,9 +167,10 @@ class Mutex
      * So, only the first callback with the same key can be run at the same
      * time and no other callbacks with that key will be run concurrently.
      *
-     * @param mixed $mutexKey
+     * @param mixed         $mutexKey
      * @param callable|null $callback
-     * @param mixed ...$args
+     * @param mixed         ...$args
+     *
      * @return PromiseInterface
      */
     public function runOnce($mutexKey, ?callable $callback = null, ...$args): PromiseInterface
@@ -180,11 +187,14 @@ class Mutex
             return resolve($result);
         }
         $this->onceLocks[$mutexKey] = $result;
+
         return $result->then(function ($result) use ($mutexKey) {
             unset($this->onceLocks[$mutexKey]);
+
             return $result;
         }, function (Throwable $e) use ($mutexKey) {
             unset($this->onceLocks[$mutexKey]);
+
             throw $e;
         });
     }

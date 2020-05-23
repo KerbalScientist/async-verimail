@@ -5,7 +5,6 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\Stream;
 
 use Evenement\EventEmitterTrait;
@@ -55,12 +54,13 @@ trait ReadableStreamWrapperTrait
      * If returns null, emit will not be called.
      *
      * @param mixed ...$args
+     *
      * @return array|null
      */
     abstract protected function filterData(...$args): ?array;
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function isReadable()
     {
@@ -68,7 +68,7 @@ trait ReadableStreamWrapperTrait
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function pause()
     {
@@ -76,7 +76,7 @@ trait ReadableStreamWrapperTrait
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function resume()
     {
@@ -84,7 +84,7 @@ trait ReadableStreamWrapperTrait
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function pipe(WritableStreamInterface $dest, array $options = array())
     {
@@ -93,7 +93,7 @@ trait ReadableStreamWrapperTrait
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function close()
     {

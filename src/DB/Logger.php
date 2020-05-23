@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\DB;
-
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -27,7 +25,7 @@ class Logger implements LoggerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function emergency($message, array $context = array())
     {
@@ -35,7 +33,7 @@ class Logger implements LoggerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function alert($message, array $context = array())
     {
@@ -43,7 +41,7 @@ class Logger implements LoggerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function critical($message, array $context = array())
     {
@@ -51,7 +49,7 @@ class Logger implements LoggerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function error($message, array $context = array())
     {
@@ -59,7 +57,7 @@ class Logger implements LoggerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function warning($message, array $context = array())
     {
@@ -67,7 +65,7 @@ class Logger implements LoggerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function notice($message, array $context = array())
     {
@@ -75,7 +73,7 @@ class Logger implements LoggerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function info($message, array $context = array())
     {
@@ -83,7 +81,7 @@ class Logger implements LoggerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function debug($message, array $context = array())
     {
@@ -94,14 +92,13 @@ class Logger implements LoggerInterface
     {
         $this->innerLogger->log(
             LogLevel::DEBUG,
-            "Query:\n$sql\n" .
-            "Bind: " . json_encode($bindValues, JSON_UNESCAPED_UNICODE) . "\n  " .
-            $append
-            , $context);
+            "Query:\n$sql\n".
+            'Bind: '.json_encode($bindValues, JSON_UNESCAPED_UNICODE)."\n  ".
+            $append, $context);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function log($level, $message, array $context = array())
     {

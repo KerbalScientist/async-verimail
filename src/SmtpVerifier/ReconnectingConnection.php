@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\SmtpVerifier;
-
 
 use Evenement\EventEmitterTrait;
 use Psr\Log\LoggerAwareInterface;
@@ -38,9 +36,10 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
      * ReconnectingConnection constructor.
      *
      * @param ConnectionInterface $connection
-     * @param ConnectorInterface $connector
-     * @param string $hostname
-     * @param array $settings
+     * @param ConnectorInterface  $connector
+     * @param string              $hostname
+     * @param array               $settings
+     *
      * @todo Events pipe.
      */
     public function __construct(
@@ -48,31 +47,30 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
         ConnectorInterface $connector,
         string $hostname,
         array $settings = []
-    )
-    {
+    ) {
         $this->innerConnection = $connection;
         Util::forwardEvents($connection, $this, ['close', 'error', 'active']);
-        /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
+        /* @noinspection PhpFieldAssignmentTypeMismatchInspection */
         $this->innerConnectionPromise = resolve($connection);
         $this->connector = $connector;
         $this->hostname = $hostname;
         $this->maxFailedReconnects = $settings['maxReconnects'] ?? 10;
     }
 
-
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function isBusy(): bool
     {
         if (!$this->innerConnection) {
             return false;
         }
+
         return $this->innerConnection->isBusy();
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function sendVerifyRecipient(string $email): PromiseInterface
     {
@@ -88,17 +86,21 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
         if ($this->isOverReconnectLimit()) {
             return $result;
         }
+
         return $result
             ->then(function ($result) {
                 ++$this->successfulCalls;
                 $this->reconnects = 0;
+
                 return $result;
             }, function (Throwable $e) use ($methodName, $args) {
                 if ($e instanceof ConnectionClosedException) {
                     $this->reconnect();
                     $this->successfulCalls = 0;
+
                     return $this->$methodName(...$args);
                 }
+
                 throw $e;
             });
     }
@@ -109,7 +111,6 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
     }
 
     /**
-     * @return void
      * @todo maxReconnects
      */
     private function reconnect(): void
@@ -131,9 +132,10 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
         $this->innerConnection = null;
         $this->innerConnectionPromise = $innerConnectionPromise
             ->then(function (ConnectionInterface $connection) {
-                if ($connection instanceof ReconnectingConnection) {
+                if ($connection instanceof self) {
                     return $connection->getInnerConnectionPromise();
                 }
+
                 return $connection;
             })
             ->then(function (ConnectionInterface $connection) {
@@ -143,11 +145,13 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
                     $this->logger->debug("Connection to $this->hostname is over reconnect limit.");
                     Util::forwardEvents($this->innerConnection, $this, ['close', 'error']);
                 }
+
                 return $connection;
             })
             ->then(null, function (Throwable $e) {
                 $this->logger->error($e->getMessage());
                 $this->logger->debug("$e");
+
                 throw $e;
             });
     }
@@ -161,7 +165,7 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function isReliable(): PromiseInterface
     {
@@ -169,7 +173,7 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function close(): void
     {

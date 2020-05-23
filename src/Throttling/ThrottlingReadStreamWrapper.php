@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\Throttling;
-
 
 use App\Stream\ReadableStreamWrapperTrait;
 use React\Promise\PromiseInterface;
@@ -41,11 +39,12 @@ class ThrottlingReadStreamWrapper implements ReadableStreamInterface
 
     public function emit($event, array $arguments = [])
     {
-        if ($event !== 'data' && !$this->buffer->count()) {
+        if ('data' !== $event && !$this->buffer->count()) {
             $this->parentEmit($event, $arguments);
+
             return;
         }
-        if ($event !== 'data') {
+        if ('data' !== $event) {
             all(iterator_to_array($this->buffer))->always(function () use ($event, $arguments) {
                 $this->parentEmit($event, $arguments);
             });
@@ -65,11 +64,10 @@ class ThrottlingReadStreamWrapper implements ReadableStreamInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function filterData(...$args): ?array
     {
         return $args;
     }
-
 }

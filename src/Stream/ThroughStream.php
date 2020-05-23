@@ -5,7 +5,6 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\Stream;
 
 use Evenement\EventEmitter;
@@ -39,7 +38,7 @@ final class ThroughStream extends EventEmitter implements DuplexStreamInterface
 
     public function __construct($callback = null)
     {
-        if ($callback !== null && !is_callable($callback)) {
+        if (null !== $callback && !is_callable($callback)) {
             throw new InvalidArgumentException('Invalid transformation callback given');
         }
 
@@ -105,7 +104,7 @@ final class ThroughStream extends EventEmitter implements DuplexStreamInterface
             return false;
         }
 
-        if ($this->callback !== null) {
+        if (null !== $this->callback) {
             try {
                 $data = call_user_func($this->callback, $data);
             } catch (Exception $e) {
@@ -120,6 +119,7 @@ final class ThroughStream extends EventEmitter implements DuplexStreamInterface
 
         if ($this->paused) {
             $this->drain = true;
+
             return false;
         }
 

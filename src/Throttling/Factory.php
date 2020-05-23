@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\Throttling;
-
 
 use Closure;
 use React\EventLoop\LoopInterface;
@@ -19,6 +17,7 @@ class Factory
 
     /**
      * Factory constructor.
+     *
      * @param LoopInterface $eventLoop
      */
     public function __construct(LoopInterface $eventLoop)
@@ -35,7 +34,7 @@ class Factory
     {
         return new ThrottlingReadStreamWrapper($innerStream, $this, [
             'minIntervalSeconds' => $minIntervalSeconds,
-            'bufferSize' => $bufferSize
+            'bufferSize' => $bufferSize,
         ]);
     }
 }

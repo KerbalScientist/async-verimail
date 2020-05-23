@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\SmtpVerifier;
-
 
 use InvalidArgumentException;
 
@@ -44,10 +42,10 @@ final class Message
     {
         $message = new self();
         $code = substr($data, 0, self::RCODE_LENGTH);
-        if (strlen($code) !== self::RCODE_LENGTH || !is_numeric($code)) {
-            throw new InvalidArgumentException("Malformed SMTP reply.");
+        if (self::RCODE_LENGTH !== strlen($code) || !is_numeric($code)) {
+            throw new InvalidArgumentException('Malformed SMTP reply.');
         }
-        $message->rcode = (int)$code;
+        $message->rcode = (int) $code;
         $message->text = substr($data, self::RCODE_LENGTH);
         $message->data = $data;
         if ($message->isOverQuota()) {
@@ -55,10 +53,12 @@ final class Message
         }
         if ($message->isSenderBlocked()) {
             $message->connectionState = self::STATE_SENDER_BLOCKED;
+
             return $message;
         }
         if ($message->isAuthNeeded()) {
             $message->connectionState = self::STATE_AUTH_NEEDED;
+
             return $message;
         }
         if ($message->isTooManyRecipients()) {
@@ -67,6 +67,7 @@ final class Message
         if ($message->isAboutToClose()) {
             $message->connectionState = self::STATE_ABOUT_TO_CLOSE;
         }
+
         return $message;
     }
 
@@ -75,7 +76,8 @@ final class Message
         if ($this->rcode < 400) {
             return false;
         }
-        return (bool)preg_match('/\b(over quota|OverQuotaTemp|' .
+
+        return (bool) preg_match('/\b(over quota|OverQuotaTemp|'.
             'too many concurrent|try again later)\b/i', $this->data);
     }
 
@@ -84,8 +86,9 @@ final class Message
         if ($this->rcode < 400) {
             return false;
         }
-        return (bool)preg_match(
-            '/\b(spamhaus|blocked|abuseat|refused|' .
+
+        return (bool) preg_match(
+            '/\b(spamhaus|blocked|abuseat|refused|'.
             'you are not allowed|black listed|not permitted)\b/i', $this->data);
     }
 
@@ -100,7 +103,8 @@ final class Message
         if ($this->rcode >= 500) {
             return false;
         }
-        return (bool)preg_match('/\bunknown user account|should log in\b/i', $this->data);
+
+        return (bool) preg_match('/\bunknown user account|should log in\b/i', $this->data);
     }
 
     private function isTooManyRecipients(): bool
@@ -108,19 +112,21 @@ final class Message
         if ($this->rcode < 400) {
             return false;
         }
-        return (bool)preg_match(
+
+        return (bool) preg_match(
             '/\b(too many recipients)\b/i', $this->data);
     }
 
     private function isAboutToClose(): bool
     {
-        if ($this->rcode === self::RCODE_CLOSE) {
+        if (self::RCODE_CLOSE === $this->rcode) {
             return true;
         }
         if ($this->rcode < 400) {
             return false;
         }
-        return (bool)preg_match(
+
+        return (bool) preg_match(
             '/\b(not accepting network messages|timeout)\b/i',
             $this->data
         );
@@ -131,23 +137,22 @@ final class Message
      */
     public function throwSenderStatusException()
     {
-        if ($this->connectionState !== self::STATE_OK) {
-            $message = 'Server reply: ' . $this->data;
+        if (self::STATE_OK !== $this->connectionState) {
+            $message = 'Server reply: '.$this->data;
         } else {
             $message = '';
         }
         switch ($this->connectionState) {
-            case Message::STATE_AUTH_NEEDED:
+            case self::STATE_AUTH_NEEDED:
                 throw new AuthenticationRequiredException($message);
-            case Message::STATE_OVER_QUOTA:
+            case self::STATE_OVER_QUOTA:
                 throw new OverQuotaException($message);
-            case Message::STATE_SENDER_BLOCKED:
+            case self::STATE_SENDER_BLOCKED:
                 throw new SenderBlockedException($message);
-            case Message::STATE_TOO_MANY_RECIPIENTS:
+            case self::STATE_TOO_MANY_RECIPIENTS:
                 throw new TooManyRecipientsException($message);
-            case Message::STATE_ABOUT_TO_CLOSE:
+            case self::STATE_ABOUT_TO_CLOSE:
                 throw new ConnectionClosedException($message);
         }
     }
-
 }

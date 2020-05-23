@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\SmtpVerifier;
-
 
 use RuntimeException;
 use Throwable;
@@ -19,8 +17,8 @@ class UnexpectedReplyException extends RuntimeException
     public function __construct(Message $smtpMessage, array $expectedCodes, $code = 0, Throwable $previous = null)
     {
         $this->smtpMessage = $smtpMessage;
-        parent::__construct("Unexpected server reply: $smtpMessage->data." .
-            " Expected codes: " . implode(' ,', $expectedCodes) . '.', $code, $previous);
+        parent::__construct("Unexpected server reply: $smtpMessage->data.".
+            ' Expected codes: '.implode(' ,', $expectedCodes).'.', $code, $previous);
     }
 
     public function getSmtpMessage(): Message

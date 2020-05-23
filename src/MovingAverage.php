@@ -8,7 +8,6 @@
 
 namespace App;
 
-
 use SplPriorityQueue;
 
 class MovingAverage

@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\SmtpVerifier;
-
 
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -36,8 +34,8 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
      * ConnectionPool constructor.
      *
      * @param ConnectorInterface $connector
-     * @param LoopInterface $eventLoop
-     * @param array $settings
+     * @param LoopInterface      $eventLoop
+     * @param array              $settings
      */
     public function __construct(ConnectorInterface $connector, LoopInterface $eventLoop, array $settings)
     {
@@ -48,7 +46,7 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
             $this->maxConnectionsPerHost = $settings['maxConnectionsPerHost'];
         } else {
             $this->maxConnectionsPerHost = [
-                '*' => intval($settings['maxConnectionsPerHost'])
+                '*' => intval($settings['maxConnectionsPerHost']),
             ];
         }
         $this->logger = new NullLogger();
@@ -57,21 +55,22 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
         $this->unreliableConnection = new UnreliableConnection();
     }
 
-
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function connect(string $hostname): PromiseInterface
     {
         if (empty($this->connectionPool[$hostname])
             || count($this->connectionPool[$hostname]) < $this->getMaxConnections($hostname)) {
             $this->logger->debug("Connection - create for $hostname.");
+
             return $this->getConnection($hostname);
         }
-        /**
+        /*
          * @todo Round-robin instead of random.
          */
         $this->logger->debug("Connection - reuse busy for $hostname.");
+
         return $this->connectionPool[$hostname][array_rand($this->connectionPool[$hostname])];
     }
 
@@ -82,7 +81,7 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
 
     private function getConnection(string $hostname): PromiseInterface
     {
-        /**
+        /*
          * @todo Check MX hosts.
          */
         if (isset($this->unreliableHosts[$hostname])) {
@@ -101,6 +100,7 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
                  */
                 $reconnectingConnection = new ReconnectingConnection($connection, $this->connector, $hostname);
                 $reconnectingConnection->setLogger($this->logger);
+
                 return all([
                     'connection' => $reconnectingConnection,
                     'isReliable' => $reconnectingConnection->isReliable(),
@@ -110,6 +110,7 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
                 if (!$result['isReliable']) {
                     $this->unreliableHosts[$hostname] = true;
                     $this->logger->debug("Unreliable connection for host $hostname.");
+
                     return $this->unreliableConnection;
                 }
                 /**
@@ -131,8 +132,10 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
                 $connection->on('active', function () use ($timer) {
                     $this->eventLoop->cancelTimer($timer);
                 });
+
                 return $connection;
             });
+
         return $this->connectionPool[$hostname][$key];
     }
 }

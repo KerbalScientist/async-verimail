@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\Throttling;
-
 
 use Closure;
 use React\EventLoop\LoopInterface;
@@ -24,9 +22,10 @@ class ClosureWrapper
 
     /**
      * ThrottlingWrapper constructor.
-     * @param Closure $closure
+     *
+     * @param Closure       $closure
      * @param LoopInterface $eventLoop
-     * @param float $minIntervalSeconds
+     * @param float         $minIntervalSeconds
      */
     public function __construct(Closure $closure, LoopInterface $eventLoop, float $minIntervalSeconds)
     {
@@ -40,6 +39,7 @@ class ClosureWrapper
         $time = microtime(true);
         if ($time > $this->nextCallTime) {
             $this->nextCallTime = $time + $this->minIntervalSeconds;
+
             return resolve(($this->closure)(...$args));
         }
         $deferred = new Deferred();
@@ -50,6 +50,7 @@ class ClosureWrapper
             }
         );
         $this->nextCallTime = $this->nextCallTime + $this->minIntervalSeconds;
+
         return $deferred->promise();
     }
 }

@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\Stream;
-
 
 use Evenement\EventEmitter;
 use InvalidArgumentException;
@@ -30,8 +28,9 @@ class ResolvingThroughStream extends EventEmitter implements DuplexStreamInterfa
 
     /**
      * ResolvingThroughStream constructor.
+     *
      * @param LoopInterface $eventLoop
-     * @param int $softBufferSize
+     * @param int           $softBufferSize
      */
     public function __construct(LoopInterface $eventLoop, int $softBufferSize)
     {
@@ -57,9 +56,10 @@ class ResolvingThroughStream extends EventEmitter implements DuplexStreamInterfa
     {
         if (!$data instanceof PromiseInterface) {
             $this->emit('error', [
-                new InvalidArgumentException('Invalid promise given.')
+                new InvalidArgumentException('Invalid promise given.'),
             ]);
             $this->close();
+
             return false;
         }
         $key = array_key_last($this->promiseBuffer) + 1;
@@ -72,6 +72,7 @@ class ResolvingThroughStream extends EventEmitter implements DuplexStreamInterfa
             $this->emit('error', [$error]);
             $this->close();
         });
+
         return (count($this->promiseBuffer) + count($this->buffer)) < $this->softBufferSize;
     }
 

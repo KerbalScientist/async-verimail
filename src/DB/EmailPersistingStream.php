@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\DB;
-
 
 use App\Entity\Email;
 use Aura\SqlQuery\Mysql\Insert as MysqlInsert;
@@ -19,7 +17,6 @@ use InvalidArgumentException;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\NullLogger;
 use React\MySQL\ConnectionInterface;
-use React\MySQL\QueryResult;
 use React\Promise\PromiseInterface;
 use React\Stream\WritableStreamInterface;
 use ReflectionClass;
@@ -46,16 +43,16 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
 
     /**
      * EmailPersistingStream constructor.
+     *
      * @param ConnectionInterface $connection
-     * @param QueryFactory $queryFactory
-     * @param array $settings
+     * @param QueryFactory        $queryFactory
+     * @param array               $settings
      */
     public function __construct(
         ConnectionInterface $connection,
         QueryFactory $queryFactory,
         array $settings = []
-    )
-    {
+    ) {
         $this->connection = $connection;
         $this->queryFactory = $queryFactory;
         $this->setLogger(new NullLogger());
@@ -86,10 +83,9 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
 
     public function flush(): PromiseInterface
     {
-
         return all([
             $this->flushUpdateBuffer(),
-            $this->flushInsertBuffer()
+            $this->flushInsertBuffer(),
         ]);
     }
 
@@ -97,6 +93,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
     {
         if (!$this->updateBuffer) {
             $this->emit('drain');
+
             return resolve();
         }
         $query = $this->createInsertQuery($this->updateBuffer);
@@ -106,6 +103,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
         $params = $this->getBindValues($query);
         $sql = $query->getStatement();
         $this->logger->debugQuery($sql, $params);
+
         return $this->connection->query($sql, $params)->then(function () {
             $this->bufferIsFull = false;
             if ($this->drain) {
@@ -113,7 +111,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
                 $this->emit('drain');
             }
         }, function ($e) {
-            $this->logger->error("Error while flushing update buffer.");
+            $this->logger->error('Error while flushing update buffer.');
             $this->logger->debug("$e");
             $this->emit('error', [$e]);
         });
@@ -132,6 +130,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
             $query->addRow($row);
         }
         $query->addRow();
+
         return $query;
     }
 
@@ -139,7 +138,9 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
 
     /**
      * @param QueryInterface $query
+     *
      * @return array
+     *
      * @todo Replace with Query decorator.
      */
     private function getBindValues(QueryInterface $query)
@@ -148,6 +149,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
         foreach ($query->getBindValues() as $key => $value) {
             $result[":$key"] = $value;
         }
+
         return $result;
     }
 
@@ -158,6 +160,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
                 $this->drain = false;
                 $this->emit('drain');
             }
+
             return resolve();
         }
         $query = $this->createInsertQuery($this->insertBuffer);
@@ -172,14 +175,14 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
         $params = $this->getBindValues($query);
         $sql = $query->getStatement();
         $this->logger->debugQuery($sql, $params);
-        /**
+        /*
          * @var $result QueryResult
          */
         return $this->connection->query($sql, $params)
             ->then(function ($result) use ($buffer) {
                 $id = $result->insertId;
                 foreach (array_reverse($buffer) as $email) {
-                    /**
+                    /*
                      * @var $email Email
                      */
                     $email->i_id = $id--;
@@ -189,9 +192,10 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
                     $this->drain = false;
                     $this->emit('drain');
                 }
+
                 return $result;
             }, function ($e) {
-                $this->logger->error("Error while flushing insert buffer.");
+                $this->logger->error('Error while flushing insert buffer.');
                 $this->logger->debug("$e");
                 $this->emit('error', [$e]);
             });
@@ -207,7 +211,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function end($data = null)
     {
@@ -218,7 +222,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function write($data)
     {
@@ -227,7 +231,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
         }
         if (!$data instanceof Email) {
             $this->emit('error', [
-                new InvalidArgumentException('Invalid Email entity given.')
+                new InvalidArgumentException('Invalid Email entity given.'),
             ]);
         }
 
@@ -242,13 +246,15 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
         }
         if ($this->bufferIsFull) {
             $this->drain = true;
+
             return false;
         }
+
         return true;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function isWritable()
     {
@@ -265,7 +271,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function close()
     {

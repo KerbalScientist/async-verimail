@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\DB;
-
 
 use App\Entity\Email;
 use App\Entity\VerifyStatus;
@@ -47,11 +45,12 @@ class EmailEntityManager implements LoggerAwareInterface
 
     /**
      * EmailEntityManager constructor.
-     * @param string $tableName
+     *
+     * @param string              $tableName
      * @param ConnectionInterface $readConnection
      * @param ConnectionInterface $writeConnection
-     * @param QueryFactory $queryFactory
-     * @param array $settings
+     * @param QueryFactory        $queryFactory
+     * @param array               $settings
      */
     public function __construct(
         string $tableName,
@@ -77,11 +76,11 @@ class EmailEntityManager implements LoggerAwareInterface
             ->from($this->tableName)
             ->cols($colNames);
         if (isset($filter['#limit'])) {
-            $query->limit((int)$filter['#limit']);
+            $query->limit((int) $filter['#limit']);
             unset($filter['#limit']);
         }
         if (isset($filter['#offset'])) {
-            $query->offset((int)$filter['#offset']);
+            $query->offset((int) $filter['#offset']);
             unset($filter['#offset']);
         }
         foreach ($filter as $colName => $value) {
@@ -89,8 +88,9 @@ class EmailEntityManager implements LoggerAwareInterface
                 continue;
             }
             if (!is_array($value)) {
-                /** @noinspection PhpMethodParametersCountMismatchInspection */
+                /* @noinspection PhpMethodParametersCountMismatchInspection */
                 $query->where("$colName = ?", $value);
+
                 continue;
             }
             $operator = array_shift($value);
@@ -99,35 +99,40 @@ class EmailEntityManager implements LoggerAwareInterface
             }
             $negate = false;
             $value = array_shift($value);
-            if ($operator === 'NOT') {
-                /** @noinspection PhpMethodParametersCountMismatchInspection */
+            if ('NOT' === $operator) {
+                /* @noinspection PhpMethodParametersCountMismatchInspection */
                 $query->where("$colName <> ?", $value);
+
                 continue;
-            } else if (substr($operator, 0, strlen('NOT ')) === 'NOT ') {
+            } elseif ('NOT ' === substr($operator, 0, strlen('NOT '))) {
                 $negate = true;
                 $operator = trim(
                     substr($operator, strlen('NOT '))
                 );
             }
-            if ($operator === 'IN') {
+            if ('IN' === $operator) {
                 $query->where(
                     $this->sqlNegate("$colName IN (:$colName)", $negate));
-                $query->bindValue($colName, (array)$value);
+                $query->bindValue($colName, (array) $value);
+
                 continue;
-            } else if (
-                $operator === 'LIKE'
-                || $operator === '>'
-                || $operator === '<'
-                || $operator === '<='
-                || $operator === '>='
+            } elseif (
+                'LIKE' === $operator
+                || '>' === $operator
+                || '<' === $operator
+                || '<=' === $operator
+                || '>=' === $operator
             ) {
                 $query->where(
                     $this->sqlNegate("$colName $operator :$colName", $negate));
-                $query->bindValue($colName, (string)$value);
+                $query->bindValue($colName, (string) $value);
+
                 continue;
             }
+
             throw new InvalidArgumentException("Unknown SQL operator '$operator'");
         }
+
         return $query;
     }
 
@@ -144,6 +149,7 @@ class EmailEntityManager implements LoggerAwareInterface
                 return !$property->isStatic();
             }
         );
+
         return $result;
     }
 
@@ -152,12 +158,13 @@ class EmailEntityManager implements LoggerAwareInterface
         if ($negate) {
             return "NOT ($condition)";
         }
+
         return $condition;
     }
 
     public function installSchema(): PromiseInterface
     {
-        $statusEnumValues = "'" . implode("', '", VerifyStatus::all()) . "'";
+        $statusEnumValues = "'".implode("', '", VerifyStatus::all())."'";
         $sql = "
             CREATE TABLE IF NOT EXISTS `$this->tableName` (
                 i_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -169,6 +176,7 @@ class EmailEntityManager implements LoggerAwareInterface
             )
         ";
         $this->logger->debugQuery($sql);
+
         return $this->readConnection->query($sql);
     }
 
@@ -184,7 +192,7 @@ class EmailEntityManager implements LoggerAwareInterface
         $stream->on('data', function (Email $email) use ($f) {
             fputcsv($f, $this->hydrationStrategy->dehydrate($email));
         });
-        $stream->on('end', function () use (& $f, $deferred) {
+        $stream->on('end', function () use (&$f, $deferred) {
             if ($f) {
                 fclose($f);
                 $f = null;
@@ -192,7 +200,7 @@ class EmailEntityManager implements LoggerAwareInterface
             $this->logger->info('Export complete.');
             $deferred->resolve();
         });
-        $stream->on('close', function () use (& $f, $deferred) {
+        $stream->on('close', function () use (&$f, $deferred) {
             if ($f) {
                 fclose($f);
                 $f = null;
@@ -200,7 +208,7 @@ class EmailEntityManager implements LoggerAwareInterface
             $this->logger->info('Export complete.');
             $deferred->resolve();
         });
-        $stream->on('error', function (Exception $e) use (& $f, $deferred) {
+        $stream->on('error', function (Exception $e) use (&$f, $deferred) {
             if ($f) {
                 fclose($f);
                 $f = null;
@@ -209,11 +217,13 @@ class EmailEntityManager implements LoggerAwareInterface
             $this->logger->debug("$e");
             $deferred->reject($e);
         });
+
         return $deferred->promise();
     }
 
     /**
      * @param VerifyStatus[] $statusList
+     *
      * @return ReadableStreamInterface<Email>
      */
     public function streamByStatus(array $statusList): ReadableStreamInterface
@@ -223,6 +233,7 @@ class EmailEntityManager implements LoggerAwareInterface
         $query->cols(array_column($this->getDbProperties(), 'name'));
         $query->where('s_status IN (:statusList)');
         $query->bindValue('statusList', array_map('strval', $statusList));
+
         return $this->streamByQuery($query);
     }
 
@@ -230,6 +241,7 @@ class EmailEntityManager implements LoggerAwareInterface
      * Creates stream of Email entities, selected by $query.
      *
      * @param SelectInterface $query
+     *
      * @return ReadableStreamInterface<Email>
      */
     public function streamByQuery(SelectInterface $query): ReadableStreamInterface
@@ -260,12 +272,15 @@ class EmailEntityManager implements LoggerAwareInterface
         foreach ($query->getBindValues() as $key => $value) {
             $result[":$key"] = $value;
         }
+
         return $result;
     }
 
     /**
      * @param string $filename
+     *
      * @return PromiseInterface
+     *
      * @todo Stream
      */
     public function importFromCsvBlocking(string $filename): PromiseInterface
@@ -285,28 +300,31 @@ class EmailEntityManager implements LoggerAwareInterface
                 $buffer->attach($promise);
                 if ($buffer->count() >= $bufferSize) {
                     usleep(10);
+
                     continue;
                 }
                 $promise->then(function () use ($promise, $buffer) {
                     $buffer->detach($promise);
                 }, function ($error) use ($promise, $buffer) {
                     $buffer->detach($promise);
+
                     throw $error;
                 });
             } catch (Throwable $e) {
-                $this->logger->error('Failed importing row ' . json_encode($row, JSON_UNESCAPED_UNICODE));
+                $this->logger->error('Failed importing row '.json_encode($row, JSON_UNESCAPED_UNICODE));
                 $this->logger->debug("$e");
             }
         }
         fclose($f);
+
         return $this->flushPersist()->then(function () {
             $this->logger->info('Import complete.');
         });
     }
 
     /**
-     *
      * @param Email $email
+     *
      * @return PromiseInterface<QueryResult>
      */
     public function persist(Email $email): PromiseInterface
@@ -329,11 +347,13 @@ class EmailEntityManager implements LoggerAwareInterface
             $stream->removeListener('error', $error);
             $deferred->resolve();
         });
+
         try {
             $stream->write($email);
         } catch (Exception $e) {
             $deferred->reject($e);
         }
+
         return $deferred->promise();
     }
 
@@ -348,6 +368,7 @@ class EmailEntityManager implements LoggerAwareInterface
             ]
         );
         $stream->setLogger($this->logger);
+
         return $stream;
     }
 
@@ -356,6 +377,7 @@ class EmailEntityManager implements LoggerAwareInterface
         if ($this->persistingStream) {
             return $this->persistingStream->flush();
         }
+
         return resolve();
     }
 

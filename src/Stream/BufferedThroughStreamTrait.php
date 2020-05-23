@@ -7,7 +7,6 @@
 
 namespace App\Stream;
 
-
 use Evenement\EventEmitterTrait;
 use React\EventLoop\LoopInterface;
 use React\Stream\Util;
@@ -36,7 +35,6 @@ trait BufferedThroughStreamTrait
         $this->eventLoop = $eventLoop;
     }
 
-
     public function pause()
     {
         $this->paused = true;
@@ -56,6 +54,7 @@ trait BufferedThroughStreamTrait
             } catch (Throwable $e) {
                 $this->emit('error', [$e]);
                 $this->close();
+
                 return;
             }
         }
@@ -86,7 +85,7 @@ trait BufferedThroughStreamTrait
 
     public function pipe(WritableStreamInterface $dest, array $options = array())
     {
-        /** @noinspection PhpParamsInspection */
+        /* @noinspection PhpParamsInspection */
         return Util::pipe($this, $dest, $options);
     }
 
@@ -134,8 +133,10 @@ trait BufferedThroughStreamTrait
         $this->flush();
         if ($this->paused || !$result) {
             $this->drain = true;
+
             return false;
         }
+
         return true;
     }
 
@@ -143,7 +144,8 @@ trait BufferedThroughStreamTrait
      * Writes data to buffer.
      *
      * @param $data
-     * @return bool True if buffer is not full.
+     *
+     * @return bool true if buffer is not full
      */
     abstract protected function writeToBuffer($data): bool;
 }

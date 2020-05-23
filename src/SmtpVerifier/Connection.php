@@ -5,7 +5,6 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\SmtpVerifier;
 
 use App\Mutex;
@@ -31,7 +30,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
 
     const REPLY_SEPARATOR = "\r\n";
     const MESSAGE_LINE_SEPARATOR = "\n";
-    const MULTILINE_REPLY_MARKER = "-";
+    const MULTILINE_REPLY_MARKER = '-';
 
     private ConnectionInterface $connection;
     private Mutex $mutex;
@@ -43,7 +42,8 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
     private int $closeAfterVerifications;
     private bool $busy = false;
     /**
-     * @var Deferred[] Awaited replies.
+     * @var Deferred[] awaited replies
+     *
      * @todo Tested possibility to send multiple commands without waiting for replies.
      *     Though it is working for HELO and MAIL FROM commands, sometimes servers send not all of the replies.
      *     Also, replies is often sent in random order.
@@ -60,14 +60,13 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
     private string $remoteAddress;
     private string $localAddress;
 
-
     /**
      * SmtpVerifierConnection constructor.
      *
      * @param ConnectionInterface $connection
-     * @param Mutex $mutex
-     * @param string $hostname
-     * @param array $settings
+     * @param Mutex               $mutex
+     * @param string              $hostname
+     * @param array               $settings
      */
     public function __construct(ConnectionInterface $connection, Mutex $mutex, string $hostname, array $settings)
     {
@@ -79,7 +78,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
         $this->fromHost = $settings['fromHost'] ?? 'localhost';
         $this->resetAfterVerifications = $settings['resetAfterVerifications'] ?? 25;
         $this->closeAfterVerifications = $settings['closeAfterVerifications'] ?? 0;
-        /** @noinspection SpellCheckingInspection */
+        /* @noinspection SpellCheckingInspection */
         $this->randomUser = $settings['randomUser']
             ?? 'mo4rahpheix8ti7ohT0eoku0oisien6ohKaenuutareiCei3ad9Ibedoogh6quie';
         $this->remoteAddress = $this->connection->getRemoteAddress();
@@ -105,9 +104,11 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
             if (isset($this->reliable)) {
                 return resolve($this->reliable);
             }
+
             return $this->sendVerifyRecipient("$this->randomUser@$this->hostname")
                 ->then(function (Message $message) {
-                    $this->reliable = $message->rcode !== Message::RCODE_OK;
+                    $this->reliable = Message::RCODE_OK !== $message->rcode;
+
                     return $this->reliable;
                 });
         });
@@ -117,6 +118,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
      * Sends verification message to server, returns promise resolving with server reply message.
      *
      * @param string $email
+     *
      * @return PromiseInterface<Message>
      */
     public function sendVerifyRecipient(string $email): PromiseInterface
@@ -142,8 +144,9 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
             ++$this->enqueuedCount;
             if (!$this->resetOnVerify) {
                 $this->resetOnVerify = ($this->resetAfterVerifications
-                    && ($this->enqueuedCount % $this->resetAfterVerifications) === 0);
+                    && 0 === ($this->enqueuedCount % $this->resetAfterVerifications));
             }
+
             return all($promises)
                 ->then(function () use ($email) {
                     if ($this->closedException) {
@@ -151,13 +154,15 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
                     }
                     $this->busy = true;
                     $this->logger->debug("Verifying $email (to {$this->getRemoteAddress()}"
-                        . " from {$this->getLocalAddress()}).");
-                    if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+                        ." from {$this->getLocalAddress()}).");
+                    if (false === filter_var($email, FILTER_VALIDATE_EMAIL)) {
                         throw new InvalidArgumentException("Invalid email '$email'.");
                     }
+
                     return $this->sendCommand('RCPT TO:', "<$email>")
                         ->then(function (Message $message) {
                             $this->busy = false;
+
                             return $this->validateReply(
                                 $message,
                                 Message::RCODE_OK,
@@ -166,15 +171,19 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
                             );
                         }, function (Throwable $e) {
                             $this->busy = false;
+
                             throw $e;
                         });
                 });
         });
+
         return $result->then(null, function (Throwable $e) use ($email) {
             if ($e instanceof TooManyRecipientsException) {
                 $this->resetOnVerify = true;
+
                 return $this->sendVerifyRecipient($email);
             }
+
             throw $e;
         });
     }
@@ -182,6 +191,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
     /**
      * @param string $name
      * @param string $data
+     *
      * @return PromiseInterface<Message>
      */
     public function sendCommand(string $name, string $data = ''): PromiseInterface
@@ -191,15 +201,16 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
                 return reject($this->closedException);
             }
             if ($data) {
-                $data = ' ' . $data;
+                $data = ' '.$data;
             }
-            $this->logger->debug("To {$this->getRemoteAddress()}" .
+            $this->logger->debug("To {$this->getRemoteAddress()}".
                 " from {$this->getLocalAddress()}: $name$data");
-            /**
+            /*
              * @todo Respect return value. It will be false if buffer is full.
              *   In this case we must pause until drain event.
              */
-            $this->connection->write($name . $data . self::REPLY_SEPARATOR);
+            $this->connection->write($name.$data.self::REPLY_SEPARATOR);
+
             return $this->receiveReply(false);
         });
     }
@@ -216,6 +227,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
 
     /**
      * @param bool $enqueue
+     *
      * @return PromiseInterface<Message>
      */
     private function receiveReply($enqueue = true): PromiseInterface
@@ -237,58 +249,62 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
             return $deferred->promise()
                 ->then(function ($data) {
                     $this->emit('active');
+
                     return Message::createForData($data);
                 });
         };
         if ($enqueue) {
             return $this->mutex->enqueue($this, $callback);
         }
+
         return resolve($callback());
     }
 
     private function setEventListeners(): void
     {
         $this->connection->on('data', function ($data) {
-            if (strpos($data, self::REPLY_SEPARATOR) === false) {
+            if (false === strpos($data, self::REPLY_SEPARATOR)) {
                 // Reply part received.
                 $this->replyBuffer .= $data;
+
                 return;
             }
-            $this->logger->debug("From {$this->getRemoteAddress()}" .
+            $this->logger->debug("From {$this->getRemoteAddress()}".
                 " to {$this->getLocalAddress()}: $data");
             // Reply line received.
             $separated = explode(self::REPLY_SEPARATOR,
-                $this->replyBuffer . $data);
+                $this->replyBuffer.$data);
             $this->replyBuffer = array_pop($separated) ?? '';
             $replyMultiline = '';
             foreach ($separated as $reply) {
-                if (substr($reply, Message::RCODE_LENGTH, 1) === self::MULTILINE_REPLY_MARKER) {
+                if (self::MULTILINE_REPLY_MARKER === substr($reply, Message::RCODE_LENGTH, 1)) {
                     // Received multiline reply part.
                     $replyMultiline .= substr($reply, Message::RCODE_LENGTH + 1)
-                        . self::MESSAGE_LINE_SEPARATOR;
+                        .self::MESSAGE_LINE_SEPARATOR;
+
                     continue;
                 } else {
                     // Received full reply.
                     $reply = substr($reply, 0, Message::RCODE_LENGTH + 1)
-                        . $replyMultiline
-                        . substr($reply, Message::RCODE_LENGTH + 1);
+                        .$replyMultiline
+                        .substr($reply, Message::RCODE_LENGTH + 1);
                     $replyMultiline = '';
                 }
                 if (!$this->replyDeferred) {
-                    $this->logger->debug("Unhandled message from {$this->getRemoteAddress()}" .
+                    $this->logger->debug("Unhandled message from {$this->getRemoteAddress()}".
                         " to {$this->getLocalAddress()}: $data");
+
                     continue;
                 }
                 array_shift($this->replyDeferred)
                     ->resolve($reply);
             }
-
         });
         $this->connection->on('error', function ($error) {
-            $this->logger->debug("Connection error from {$this->getRemoteAddress()}" .
+            $this->logger->debug("Connection error from {$this->getRemoteAddress()}".
                 " to {$this->getLocalAddress()}.");
             if (!$this->closedException) {
-                $this->closedException = new ConnectionClosedException("Connection error.", 0, $error);
+                $this->closedException = new ConnectionClosedException('Connection error.', 0, $error);
             }
             $this->emit('error', [$error]);
             $this->close();
@@ -297,10 +313,10 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
             }
         });
         $this->connection->on('close', function () {
-            $this->logger->debug("Connection closed from {$this->getRemoteAddress()}" .
+            $this->logger->debug("Connection closed from {$this->getRemoteAddress()}".
                 " to {$this->getLocalAddress()}.");
             if (!$this->closedException) {
-                $this->closedException = new ConnectionClosedException("Connection closed.");
+                $this->closedException = new ConnectionClosedException('Connection closed.');
             }
             $this->close();
             while ($deferred = array_shift($this->replyDeferred)) {
@@ -332,12 +348,14 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
             return resolve();
         }
         $this->initialized = true;
+
         return $this->receiveReply()
             ->then(function (Message $message) {
                 $this->validateReply(
                     $message,
                     Message::RCODE_SERVICE_READY
                 );
+
                 return $this->reset(false)
                     ->then(function () use ($message) {
                         return $message;
@@ -347,13 +365,15 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
 
     /**
      * @param Message $message
-     * @param int ...$expectedReplyCodes
+     * @param int     ...$expectedReplyCodes
+     *
      * @return Message
+     *
      * @throws SenderBlockedException|OverQuotaException|AuthenticationRequiredException|UnexpectedReplyException
      */
     private function validateReply(Message $message, ...$expectedReplyCodes): Message
     {
-        if ($message->connectionState === Message::STATE_ABOUT_TO_CLOSE) {
+        if (Message::STATE_ABOUT_TO_CLOSE === $message->connectionState) {
             $this->close();
         }
         $message->throwSenderStatusException();
@@ -361,13 +381,16 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
             $exception = new UnexpectedReplyException($message, $expectedReplyCodes);
             $this->closedException = $exception;
             $this->emit('error', [$exception]);
+
             throw $exception;
         }
+
         return $message;
     }
 
     /**
      * @param bool $rset
+     *
      * @return PromiseInterface
      */
     public function reset($rset = true): PromiseInterface
@@ -380,15 +403,18 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
         } else {
             $promise = resolve();
         }
+
         return $promise
             ->then(function ($result) use ($rset) {
                 if ($rset) {
                     $this->validateReply($result, Message::RCODE_OK);
                 }
+
                 return $this->sendCommand('HELO', $this->fromHost);
             })
             ->then(function ($result) {
                 $this->validateReply($result, Message::RCODE_OK);
+
                 return $this->sendCommand('MAIL FROM:', "<$this->fromEmail>");
             })->then(function ($result) {
                 $this->validateReply($result, Message::RCODE_OK);
@@ -399,5 +425,4 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
     {
         $this->close();
     }
-
 }

@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App;
-
 
 use App\DB\EmailEntityManager;
 use App\DB\EmailPersistingStream;
@@ -45,7 +43,7 @@ class EmailFixtures
      * EmailFixtures constructor.
      *
      * @param EmailEntityManager $entityManager
-     * @param LoopInterface $loop
+     * @param LoopInterface      $loop
      */
     public function __construct(EmailEntityManager $entityManager, LoopInterface $loop)
     {
@@ -59,21 +57,21 @@ class EmailFixtures
     {
         $deferred = new Deferred();
         $paused = false;
-        $this->persistingStream->on('error', function ($e) use ($deferred, & $count) {
+        $this->persistingStream->on('error', function ($e) use ($deferred, &$count) {
             $count = 0;
             $deferred->reject($e);
         });
-        $this->persistingStream->on('close', function () use ($deferred, & $count) {
+        $this->persistingStream->on('close', function () use ($deferred, &$count) {
             $count = 0;
             $deferred->resolve();
         });
-        $drainCallback = function () use (& $count, $deferred, & $paused) {
+        $drainCallback = function () use (&$count, $deferred, &$paused) {
             $paused = false;
             if (!$count) {
                 $deferred->resolve();
             }
         };
-        $tickCallback = function () use (&$count, $deferred, & $paused, & $tickCallback, $drainCallback) {
+        $tickCallback = function () use (&$count, $deferred, &$paused, &$tickCallback, $drainCallback) {
             if ($count > 0) {
                 $this->loop->futureTick($tickCallback);
             } else {
@@ -97,6 +95,7 @@ class EmailFixtures
             }
         };
         $tickCallback();
+
         return $deferred->promise();
     }
 
@@ -104,7 +103,7 @@ class EmailFixtures
     {
         $length = rand($this->maxUserLength, $this->minUserLength);
         $username = '';
-        for ($i = 0; $i < $length; $i++) {
+        for ($i = 0; $i < $length; ++$i) {
             $username .= $this->characters[rand(0, strlen($this->characters) - 1)];
         }
         $domainRandom = rand(0, 100);
@@ -116,7 +115,7 @@ class EmailFixtures
                 break;
             }
         }
+
         return "$username@$domain";
     }
-
 }

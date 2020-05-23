@@ -5,15 +5,13 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\Entity;
 
 use InvalidArgumentException;
 
 /**
- * Class EmailVerifyStatus
+ * Class EmailVerifyStatus.
  *
- * @package App
  *
  * @method static VerifyStatus UNKNOWN()
  * @method static VerifyStatus INVALID()
@@ -59,7 +57,7 @@ class VerifyStatus
             self::NO_MX_RECORDS => 'Не найдены записи MX для домена',
             self::SMTP_VERIFIED => 'Пользователь существует',
             self::SMTP_USER_NOT_FOUND => 'Пользователь не найден',
-            self::SMTP_RETRY_LATER => 'Исчерпана квота на количество запросов к SMTP с IP-адреса,' .
+            self::SMTP_RETRY_LATER => 'Исчерпана квота на количество запросов к SMTP с IP-адреса,'.
                 ' либо IP-адрес заблокирован сервером',
             self::SMTP_UNEXPECTED_REPLY => 'Сервер вернул неверный код ответа',
         ];
@@ -74,7 +72,7 @@ class VerifyStatus
 
     public static function __callStatic($name, $arguments)
     {
-        return new self(constant(self::class . "::$name"));
+        return new self(constant(self::class."::$name"));
     }
 
     public function __toString(): string
@@ -86,5 +84,4 @@ class VerifyStatus
     {
         return self::getDescriptions()[$this->value];
     }
-
 }

@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\Stream;
-
 
 use Exception;
 use Iterator;
@@ -27,7 +25,7 @@ class ChunksCollectingStreamWrapper implements ReadableStreamInterface, Promisor
      * CollectsChunksReadableTrait constructor.
      *
      * @param ReadableStreamInterface $innerStream
-     * @param array $settings
+     * @param array                   $settings
      */
     public function __construct(ReadableStreamInterface $innerStream, array $settings = [])
     {
@@ -38,7 +36,7 @@ class ChunksCollectingStreamWrapper implements ReadableStreamInterface, Promisor
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function isReadable()
     {
@@ -46,7 +44,7 @@ class ChunksCollectingStreamWrapper implements ReadableStreamInterface, Promisor
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function filterData(...$args): ?array
     {
@@ -59,6 +57,7 @@ class ChunksCollectingStreamWrapper implements ReadableStreamInterface, Promisor
         if (count($this->buffer) >= $this->chunkSize) {
             $this->flush();
         }
+
         return null;
     }
 
@@ -75,7 +74,7 @@ class ChunksCollectingStreamWrapper implements ReadableStreamInterface, Promisor
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function forwardReadEvents()
     {

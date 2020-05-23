@@ -5,7 +5,6 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\SmtpVerifier;
 
 use Evenement\EventEmitterInterface;
@@ -20,6 +19,7 @@ interface ConnectionInterface extends EventEmitterInterface
 
     /**
      * @param string $email
+     *
      * @return PromiseInterface<bool>
      */
     public function sendVerifyRecipient(string $email): PromiseInterface;

@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App;
-
 
 use App\DB\EmailEntityManager;
 use App\Entity\Email;
@@ -42,8 +40,7 @@ use function React\Promise\all;
 use const STDERR;
 
 /**
- * Class App
- * @package App
+ * Class App.
  *
  * @todo God object. Commands container + service container + arguments parser.
  */
@@ -64,7 +61,7 @@ class App
     private LoggerInterface $logger;
     private WritableStreamInterface $loggerStream;
     private array $filter = [
-        's_status' => VerifyStatus::UNKNOWN
+        's_status' => VerifyStatus::UNKNOWN,
     ];
     private LoopInterface $eventLoop;
     /**
@@ -75,7 +72,7 @@ class App
      * @var int[]
      */
     private array $maxConnectionsPerHost = [
-        /**
+        /*
          * @todo Hardcoded. Move to config.
          */
         '*' => 1,
@@ -99,19 +96,21 @@ class App
 
     /**
      * @param array|null $args
-     * @return int Exit code.
+     *
+     * @return int exit code
      */
     public function run(?array $args = null): int
     {
         if (is_null($args)) {
             $args = $GLOBALS['argv'];
         }
-        /**
+        /*
          * @todo Move to config.
          */
         if (extension_loaded('xdebug')) {
             ini_set('xdebug.max_nesting_level', '100000');
         }
+
         try {
             $args = $this->processArgs($args);
             array_shift($args);
@@ -121,18 +120,20 @@ class App
                 ->addSignal(SIGINT, function () use ($loop) {
                     all($this->resolveBeforeInterrupt)
                         ->then(function () use ($loop) {
-                            echo "Stopped by user." . PHP_EOL;
+                            echo 'Stopped by user.'.PHP_EOL;
                             $this->stop($loop);
                         });
                 });
+
             return $this->runCommand($command, $args);
         } catch (Throwable $e) {
             if ($this->verbose) {
-                echo "$e" . PHP_EOL;
+                echo "$e".PHP_EOL;
             } else {
-                echo "Error: {$e->getMessage()}" . PHP_EOL;
+                echo "Error: {$e->getMessage()}".PHP_EOL;
             }
         }
+
         return self::EXIT_CODE_ERROR;
     }
 
@@ -140,25 +141,27 @@ class App
     {
         $result = [];
         foreach ($args as $arg) {
-            if (substr($arg, 0, strlen(self::OPTION_PREFIX)) !== self::OPTION_PREFIX) {
+            if (self::OPTION_PREFIX !== substr($arg, 0, strlen(self::OPTION_PREFIX))) {
                 $result[] = $arg;
+
                 continue;
             }
             $opt = substr($arg, strlen(self::OPTION_PREFIX));
             $valuePos = strpos($opt, self::OPTION_VALUE_DELIMITER);
-            if ($valuePos === false) {
+            if (false === $valuePos) {
                 $optName = $opt;
                 $value = true;
             } else {
                 $optName = substr($opt, 0, $valuePos);
                 $value = substr($opt, $valuePos + 1);
             }
-            $methodName = self::OPTION_SETTER_PREFIX . ucfirst($this->kebabToCamelCase($optName));
+            $methodName = self::OPTION_SETTER_PREFIX.ucfirst($this->kebabToCamelCase($optName));
             if (!method_exists($this, $methodName)) {
                 throw new InvalidArgumentException("Unknown option '$optName'");
             }
             $this->$methodName($value);
         }
+
         return $result;
     }
 
@@ -169,6 +172,7 @@ class App
         foreach ($words as $word) {
             $result .= ucfirst($word);
         }
+
         return $result;
     }
 
@@ -177,6 +181,7 @@ class App
         if (empty($this->eventLoop)) {
             $this->eventLoop = \React\EventLoop\Factory::create();
         }
+
         return $this->eventLoop;
     }
 
@@ -193,44 +198,50 @@ class App
 
     /**
      * @param string $name
-     * @param array $args
-     * @return int Exit code.
+     * @param array  $args
+     *
+     * @return int exit code
+     *
      * @throws ReflectionException
      */
     private function runCommand(string $name, array $args): int
     {
         $startTime = microtime(true);
-        $method = $this->kebabToCamelCase($name) . self::COMMAND_METHOD_SUFFIX;
+        $method = $this->kebabToCamelCase($name).self::COMMAND_METHOD_SUFFIX;
         if (!is_callable([$this, $method])) {
-            echo "Unknown command '$name'." . PHP_EOL;
-            echo "Commands: " . implode(', ', $this->getCommands()) . "." . PHP_EOL;
+            echo "Unknown command '$name'.".PHP_EOL;
+            echo 'Commands: '.implode(', ', $this->getCommands()).'.'.PHP_EOL;
+
             return self::EXIT_CODE_ERROR;
         }
         $promise = $this->$method(...$args);
         $writeInfo = function () use ($startTime) {
-            $this->logger->info("Time: " . (microtime(true) - $startTime));
-            $this->logger->debug("Memory peak: " . memory_get_peak_usage(true));
+            $this->logger->info('Time: '.(microtime(true) - $startTime));
+            $this->logger->debug('Memory peak: '.memory_get_peak_usage(true));
         };
         $exitCode = self::EXIT_CODE_OK;
         $loop = $this->getEventLoop();
-        $promise->then(function ($result) use ($loop, $writeInfo, & $exitCode) {
+        $promise->then(function ($result) use ($loop, $writeInfo, &$exitCode) {
             $writeInfo();
-            $exitCode = (int)$result;
+            $exitCode = (int) $result;
             $this->stop($loop);
-        }, function ($error) use ($loop, $writeInfo, & $exitCode) {
+        }, function ($error) use ($loop, $writeInfo, &$exitCode) {
             $this->logger->error("$error");
             $writeInfo();
             $exitCode = self::EXIT_CODE_ERROR;
             $this->stop($loop);
-            echo "{$error->getMessage()}" . PHP_EOL;
+            echo "{$error->getMessage()}".PHP_EOL;
+
             throw $error;
         });
         $loop->run();
+
         return $exitCode;
     }
 
     /**
      * @return array
+     *
      * @throws ReflectionException
      */
     private function getCommands(): array
@@ -239,13 +250,14 @@ class App
         $class = new ReflectionClass($this);
         foreach ($class->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             $suffixLength = strlen(self::COMMAND_METHOD_SUFFIX);
-            if (substr(
+            if (self::COMMAND_METHOD_SUFFIX === substr(
                     $method->getName(),
-                    -$suffixLength) === self::COMMAND_METHOD_SUFFIX
+                    -$suffixLength)
             ) {
                 $result[] = $this->camelToKebabCase(substr($method->getName(), 0, -$suffixLength));
             }
         }
+
         return $result;
     }
 
@@ -262,10 +274,12 @@ class App
         foreach ($words as $part) {
             if (strtolower($part) === $part) {
                 $camel .= $part;
+
                 continue;
             }
-            $camel .= '-' . strtolower($part);
+            $camel .= '-'.strtolower($part);
         }
+
         return $camel;
     }
 
@@ -274,11 +288,13 @@ class App
         $loop = $this->getEventLoop();
         $logger = $this->getLogger($loop);
         $entityManager = $this->getEntityManager($loop, $logger);
+
         return $entityManager->installSchema();
     }
 
     /**
      * @param $loop
+     *
      * @return LoggerInterface
      */
     public function getLogger($loop): LoggerInterface
@@ -287,7 +303,7 @@ class App
             return new NullLogger();
         }
         if (!isset($this->logger)) {
-            /**
+            /*
              * @todo Using internal StdioLogger constructor to write to STDERR. Replace by own logger.
              */
             $this->loggerStream = new WritableResourceStream(STDERR, $loop);
@@ -297,16 +313,18 @@ class App
             ));
             if (!$this->verbose) {
                 $this->logger = $this->logger->withHideLevels([
-                    LogLevel::DEBUG
+                    LogLevel::DEBUG,
                 ]);
             }
         }
+
         return $this->logger;
     }
 
     /**
      * @param $loop
      * @param LoggerInterface $logger
+     *
      * @return EmailEntityManager
      */
     public function getEntityManager($loop, LoggerInterface $logger): EmailEntityManager
@@ -318,20 +336,23 @@ class App
             new QueryFactory('mysql')
         );
         $entityManager->setLogger($logger);
+
         return $entityManager;
     }
 
     /**
      * @param string $name
-     * @param mixed $default
+     * @param mixed  $default
+     *
      * @return array|false|string|null
      */
     public function getConfig(string $name, $default = null)
     {
         $value = getenv($name);
-        if ($value === false) {
+        if (false === $value) {
             return $default;
         }
+
         return $value;
     }
 
@@ -344,14 +365,15 @@ class App
     {
         $url = '';
         $url .= rawurlencode(self::getConfig('DB_USER', 'root'));
-        $url .= ':' . rawurlencode(self::getConfig('DB_PASSWORD', ''));
-        $url .= '@' . self::getConfig('DB_HOST', 'localhost');
-        $url .= ':' . self::getConfig('DB_PORT', '3306');
+        $url .= ':'.rawurlencode(self::getConfig('DB_PASSWORD', ''));
+        $url .= '@'.self::getConfig('DB_HOST', 'localhost');
+        $url .= ':'.self::getConfig('DB_PORT', '3306');
         $schemaName = self::getConfig('DB_SCHEMA');
         if (!is_null($schemaName)) {
             $url .= "/$schemaName";
         }
         $url .= '?idle=-1&timeout=-1';
+
         return new BindAssocParamsConnectionDecorator(
             (new Factory($loop))->createLazyConnection($url)
         );
@@ -367,6 +389,7 @@ class App
         $loop = $this->getEventLoop();
         $logger = $this->getLogger($loop);
         $entityManager = $this->getEntityManager($loop, $logger);
+
         return $entityManager->importFromCsvBlocking($filename);
     }
 
@@ -375,6 +398,7 @@ class App
         $loop = $this->getEventLoop();
         $logger = $this->getLogger($loop);
         $entityManager = $this->getEntityManager($loop, $logger);
+
         return $entityManager->exportToCsvBlocking($filename);
     }
 
@@ -389,7 +413,7 @@ class App
         $logger = $this->getLogger($loop);
         $entityManager = $this->getEntityManager($loop, $logger);
         $config = DnsConfig::loadSystemConfigBlocking();
-        $resolver = (new \React\Dns\Resolver\Factory)->createCached(
+        $resolver = (new \React\Dns\Resolver\Factory())->createCached(
             $config->nameservers ? reset($config->nameservers) : self::DEFAULT_NAMESERVER,
             $loop
         );
@@ -437,11 +461,11 @@ class App
          * @todo Hardcoded windowWidth.
          */
         $movingAvg = new MovingAverage(15);
-        $queryStream->once('data', function () use (& $timeStart, & $timeLast) {
+        $queryStream->once('data', function () use (&$timeStart, &$timeLast) {
             $timeLast = $timeStart = microtime(true);
         });
         $verifyingStream->on('data',
-            function () use (& $count, $logger, & $timeStart, &$timeLast, $movingAvg) {
+            function () use (&$count, $logger, &$timeStart, &$timeLast, $movingAvg) {
                 ++$count;
                 $time = microtime(true);
                 if (is_null($timeStart)) {
@@ -456,19 +480,21 @@ class App
 
                 $logger->debug("$count emails verified.");
                 $logger->debug("Average speed: $avgSpeed emails per second.");
-                if ($movingAvg->get() !== 0) {
+                if (0 !== $movingAvg->get()) {
                     $movingAvgSpeed = 1 / $movingAvg->get();
                     $logger->debug("Current speed: $movingAvgSpeed emails per second.");
                 }
             });
+
         return $deferred->promise();
     }
 
     /**
      * @param $resolver
      * @param SocketConnectorInterface $connector
-     * @param LoggerInterface $logger
-     * @param LoopInterface $loop
+     * @param LoggerInterface          $logger
+     * @param LoopInterface            $loop
+     *
      * @return Verifier
      */
     public function getVerifier(
@@ -476,10 +502,9 @@ class App
         SocketConnectorInterface $connector,
         LoggerInterface $logger,
         LoopInterface $loop
-    ): Verifier
-    {
+    ): Verifier {
         $verifierConnector = new Connector($resolver, $connector, new Mutex($loop), [
-            /**
+            /*
              * @todo Hardcoded. Move to config.
              */
             '*' => [
@@ -511,11 +536,12 @@ class App
         ]);
         $verifierConnector->setLogger($logger);
         $verifierConnector = new ConnectionPool($verifierConnector, $loop, [
-            'maxConnectionsPerHost' => $this->maxConnectionsPerHost
+            'maxConnectionsPerHost' => $this->maxConnectionsPerHost,
         ]);
         $verifierConnector->setLogger($logger);
+
         return new Verifier($verifierConnector, new Mutex($loop), [
-            'maxConcurrent' => $this->maxConcurrent
+            'maxConcurrent' => $this->maxConcurrent,
         ]);
     }
 
@@ -526,7 +552,7 @@ class App
 
     public function showCommand($minInterval = 0): PromiseInterface
     {
-        $minInterval = (float)$minInterval;
+        $minInterval = (float) $minInterval;
         $loop = $this->getEventLoop();
         $logger = $this->getLogger($loop);
         $entityManager = $this->getEntityManager($loop, $logger);
@@ -537,27 +563,28 @@ class App
             use ReadableStreamWrapperTrait;
 
             /**
-             * @inheritDoc
+             * {@inheritdoc}
              */
             protected function filterData(Email $email): ?array
             {
-                return ["$email->i_id $email->m_mail $email->s_status ({$email->s_status->getDescription()})" .
-                    " {$email->dt_updated->format(DATE_ATOM)}" . PHP_EOL];
+                return ["$email->i_id $email->m_mail $email->s_status ({$email->s_status->getDescription()})".
+                    " {$email->dt_updated->format(DATE_ATOM)}".PHP_EOL, ];
             }
         };
         $deferred = new Deferred();
         $total = 0;
-        $stream->on('data', function ($data) use (& $total) {
+        $stream->on('data', function ($data) use (&$total) {
             ++$total;
             echo $data;
         });
         $stream->on('error', function ($e) use ($deferred) {
             $deferred->reject($e);
         });
-        $stream->on('end', function () use ($deferred, & $total) {
-            echo PHP_EOL . "Total: $total" . PHP_EOL;
+        $stream->on('end', function () use ($deferred, &$total) {
+            echo PHP_EOL."Total: $total".PHP_EOL;
             $deferred->resolve();
         });
+
         return $deferred->promise();
     }
 
@@ -567,6 +594,7 @@ class App
         $logger = $this->getLogger($loop);
         $entityManager = $this->getEntityManager($loop, $logger);
         $fixtures = new EmailFixtures($entityManager, $loop);
+
         return $fixtures->generate($count);
     }
 
@@ -585,7 +613,7 @@ class App
      */
     public function setOptionMaxConcurrent(string $maxConcurrent): void
     {
-        $this->maxConcurrent = (int)$maxConcurrent;
+        $this->maxConcurrent = (int) $maxConcurrent;
     }
 
     /**
@@ -619,5 +647,4 @@ class App
     {
         $this->proxy = $proxy;
     }
-
 }

@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\DB;
-
 
 use Psr\Log\LoggerInterface;
 
@@ -20,6 +18,7 @@ trait LoggerAwareTrait
 
     /**
      * Sets a logger.
+     *
      * @param LoggerInterface $logger
      */
     public function setLogger(LoggerInterface $logger): void
@@ -30,5 +29,4 @@ trait LoggerAwareTrait
             $this->logger = new Logger($logger);
         }
     }
-
 }

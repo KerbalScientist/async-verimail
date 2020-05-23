@@ -5,9 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-
 namespace App\Stream;
-
 
 use Evenement\EventEmitterTrait;
 use React\Stream\Util;
@@ -20,7 +18,6 @@ trait WritableStreamWrapperTrait
     private WritableStreamInterface $innerStream;
     private bool $closed = false;
 
-
     public function __construct(WritableStreamInterface $innerStream)
     {
         $this->initWrapper($innerStream);
@@ -30,6 +27,7 @@ trait WritableStreamWrapperTrait
     {
         if (!$innerStream->isWritable()) {
             $this->close();
+
             return;
         }
         $this->innerStream = $innerStream;
@@ -71,7 +69,9 @@ trait WritableStreamWrapperTrait
 
     /**
      * @param mixed $data
+     *
      * @return bool
+     *
      * @see WritableStreamInterface
      */
     public function write($data)
@@ -83,12 +83,14 @@ trait WritableStreamWrapperTrait
      * Consumes data passed to stream, returns data to be written to inner stream.
      *
      * @param mixed $data
+     *
      * @return mixed Data to be written;
      */
     abstract protected function filterData($data);
 
     /**
      * @param mixed $data
+     *
      * @see WritableStreamInterface
      */
     public function end($data = null)
