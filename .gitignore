@@ -1,0 +1,23 @@
+# Environment deps.
+/.env*
+
+# IDEs
+/.idea
+
+# Composer
+/vendor
+/vendor/*
+
+# Temp dirs & trash
+/temp
+/tmp
+/build
+/.build
+.DS_Store
+
+# etc.
+*.cache
+/gl-*-report.json
+/data
+!/data/.gitkeep
+*.todo
