@@ -9,6 +9,13 @@ parameters:
     ignoreErrors:
         # \ReflectionProperty::getType() returns ReflectionNamedType, not ReflectionType.
         - "#Call to an undefined method ReflectionType::getName\\(\\)#"
+        # PHPStan bug. PHPStan implies object property is unchanged after method call.
+        -
+            message: "#Negated boolean expression is always#"
+            paths:
+                - src/Stream/BufferedThroughStreamTrait.php
+                - src/Stream/ThroughStream.php
+                - src/SmtpVerifier/Connection.php
 
 parametersSchema:
     ergebnis: structure([

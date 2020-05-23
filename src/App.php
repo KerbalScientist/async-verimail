@@ -60,7 +60,7 @@ class App
     private bool $verbose = false;
     private bool $quiet = false;
     private LoggerInterface $logger;
-    private WritableStreamInterface $loggerStream;
+    private ?WritableStreamInterface $loggerStream;
     private array $filter = [
         's_status' => VerifyStatus::UNKNOWN,
     ];

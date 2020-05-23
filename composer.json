@@ -29,6 +29,6 @@
         "app:run": "php src/run.php",
         "test:ecs": "vendor/bin/ecs check",
         "fix:ecs": "vendor/bin/ecs check --fix",
-        "test:phpstan": "vendor/bin/phpstan analyse -l 3 src --memory-limit=256M"
+        "test:phpstan": "vendor/bin/phpstan analyse -l 4 src --memory-limit=256M"
     }
 }

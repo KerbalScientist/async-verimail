@@ -19,7 +19,7 @@ class ThrottlingReadStreamWrapper implements ReadableStreamInterface
     }
 
     private float $minIntervalSeconds;
-    private float $bufferSize;
+    private int $bufferSize;
     /**
      * @var SplObjectStorage
      */
