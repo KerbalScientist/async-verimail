@@ -13,7 +13,9 @@
         "ext-pcntl": "*"
     },
     "require-dev": {
-        "symplify/easy-coding-standard": "^7.2"
+        "symplify/easy-coding-standard": "^7.2",
+        "ergebnis/phpstan-rules": "^0.14",
+        "phpstan/phpstan": "^0.12"
     },
     "autoload": {
         "psr-4": {
@@ -26,6 +28,7 @@
     "scripts": {
         "app:run": "php src/run.php",
         "test:ecs": "vendor/bin/ecs check",
-        "fix:ecs": "vendor/bin/ecs check --fix"
+        "fix:ecs": "vendor/bin/ecs check --fix",
+        "test:phpstan": "vendor/bin/phpstan analyse -l 1 src --memory-limit=256M"
     }
 }
