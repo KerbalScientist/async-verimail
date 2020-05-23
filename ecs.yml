@@ -1,7 +1,16 @@
+services:
+  PhpCsFixer\Fixer\Whitespace\BlankLineBeforeStatementFixer:
+    statements:
+      - 'break'
+      - 'continue'
+      - 'return'
+      - 'throw'
+      - 'try'
 parameters:
   sets:
     - 'symfony'
   skip:
     PhpCsFixer\Fixer\Phpdoc\PhpdocVarWithoutNameFixer: ~
+    PhpCsFixer\Fixer\PhpTag\BlankLineAfterOpeningTagFixer: ~
   paths:
     - 'src'
