@@ -115,7 +115,7 @@ class App
         try {
             $args = $this->processArgs($args);
             array_shift($args);
-            $command = array_shift($args);
+            $command = array_shift($args) ?? '';
             $loop = $this->getEventLoop();
             $this->getEventLoop()
                 ->addSignal(SIGINT, function () use ($loop) {
@@ -222,6 +222,7 @@ class App
             $writeInfo();
             $exitCode = self::EXIT_CODE_ERROR;
             $this->stop($loop);
+            echo "{$error->getMessage()}" . PHP_EOL;
             throw $error;
         });
         $loop->run();
