@@ -96,7 +96,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
     /**
      * Checks if server replies ok on non-existent emails.
      *
-     * @return PromiseInterface<bool>
+     * @return PromiseInterface resolves to bool
      */
     public function isReliable(): PromiseInterface
     {
@@ -119,7 +119,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
      *
      * @param string $email
      *
-     * @return PromiseInterface<Message>
+     * @return PromiseInterface resolves to Message
      */
     public function sendVerifyRecipient(string $email): PromiseInterface
     {
@@ -192,7 +192,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
      * @param string $name
      * @param string $data
      *
-     * @return PromiseInterface<Message>
+     * @return PromiseInterface resolves to Message
      */
     public function sendCommand(string $name, string $data = ''): PromiseInterface
     {
@@ -228,7 +228,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
     /**
      * @param bool $enqueue
      *
-     * @return PromiseInterface<Message>
+     * @return PromiseInterface resolves to Message
      */
     private function receiveReply($enqueue = true): PromiseInterface
     {

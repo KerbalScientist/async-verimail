@@ -39,15 +39,17 @@ class ThrottlingReadStreamWrapper implements ReadableStreamInterface
 
     public function emit($event, array $arguments = [])
     {
-        if ('data' !== $event && !$this->buffer->count()) {
+        $emit = function () use ($event, $arguments) {
             $this->parentEmit($event, $arguments);
+        };
+        if ('data' !== $event && !$this->buffer->count()) {
+            $emit();
 
             return;
         }
         if ('data' !== $event) {
-            all(iterator_to_array($this->buffer))->always(function () use ($event, $arguments) {
-                $this->parentEmit($event, $arguments);
-            });
+            all(iterator_to_array($this->buffer))
+                ->then($emit, $emit);
         }
         $promise = ($this->emitWrapper)($event, $arguments);
         $this->buffer->attach($promise);

@@ -113,9 +113,7 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
 
                     return $this->unreliableConnection;
                 }
-                /**
-                 * @var $connection ConnectionInterface
-                 */
+                /* @var $connection ConnectionInterface */
                 $connection = $result['connection'];
                 $closeCallback = function () use ($hostname, $key) {
                     unset($this->connectionPool[$hostname][$key]);

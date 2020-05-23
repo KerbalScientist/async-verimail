@@ -14,7 +14,7 @@ interface ConnectorInterface
     /**
      * @param string $hostname
      *
-     * @return PromiseInterface<Connection>
+     * @return PromiseInterface resolves to Connection
      */
     public function connect(string $hostname): PromiseInterface;
 }

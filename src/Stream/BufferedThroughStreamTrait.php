@@ -143,7 +143,7 @@ trait BufferedThroughStreamTrait
     /**
      * Writes data to buffer.
      *
-     * @param $data
+     * @param mixed $data
      *
      * @return bool true if buffer is not full
      */

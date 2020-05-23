@@ -111,11 +111,9 @@ class Mutex
                 return;
             }
             $current = $queue->dequeue();
-            /**
-             * @var $callback callable
-             * @var $args     array
-             * @var $deferred Deferred
-             */
+            /* @var $callback callable */
+            /* @var $args     array */
+            /* @var $deferred Deferred */
             list($callback, $args, $deferred) = $current;
 
             try {

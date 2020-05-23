@@ -11,14 +11,12 @@ use App\Entity\Email;
 use App\Entity\VerifyStatus;
 use App\Stream\ThroughStream;
 use Aura\SqlQuery\Common\SelectInterface;
-use Aura\SqlQuery\QueryFactory;
 use Aura\SqlQuery\QueryInterface;
 use Exception;
 use InvalidArgumentException;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\NullLogger;
 use React\MySQL\ConnectionInterface;
-use React\MySQL\QueryResult;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
 use React\Stream\ReadableStreamInterface;
@@ -38,7 +36,7 @@ class EmailEntityManager implements LoggerAwareInterface
     private string $tableName;
     private ConnectionInterface $readConnection;
     private ConnectionInterface $writeConnection;
-    private QueryFactory $queryFactory;
+    private MysqlQueryFactory $queryFactory;
     private int $selectChunkSize;
     private HydrationStrategyInterface $hydrationStrategy;
     private ?EmailPersistingStream $persistingStream = null;
@@ -49,14 +47,14 @@ class EmailEntityManager implements LoggerAwareInterface
      * @param string              $tableName
      * @param ConnectionInterface $readConnection
      * @param ConnectionInterface $writeConnection
-     * @param QueryFactory        $queryFactory
+     * @param MysqlQueryFactory   $queryFactory
      * @param array               $settings
      */
     public function __construct(
         string $tableName,
         ConnectionInterface $readConnection,
         ConnectionInterface $writeConnection,
-        QueryFactory $queryFactory,
+        MysqlQueryFactory $queryFactory,
         array $settings = [])
     {
         $this->tableName = $tableName;
@@ -224,7 +222,7 @@ class EmailEntityManager implements LoggerAwareInterface
     /**
      * @param VerifyStatus[] $statusList
      *
-     * @return ReadableStreamInterface<Email>
+     * @return ReadableStreamInterface readable stream of Email entities
      */
     public function streamByStatus(array $statusList): ReadableStreamInterface
     {
@@ -242,7 +240,7 @@ class EmailEntityManager implements LoggerAwareInterface
      *
      * @param SelectInterface $query
      *
-     * @return ReadableStreamInterface<Email>
+     * @return ReadableStreamInterface readable stream of Email entities
      */
     public function streamByQuery(SelectInterface $query): ReadableStreamInterface
     {
@@ -325,7 +323,7 @@ class EmailEntityManager implements LoggerAwareInterface
     /**
      * @param Email $email
      *
-     * @return PromiseInterface<QueryResult>
+     * @return PromiseInterface
      */
     public function persist(Email $email): PromiseInterface
     {

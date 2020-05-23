@@ -69,9 +69,7 @@ class EmailHydrationStrategy implements HydrationStrategyInterface
 
                 continue;
             }
-            /**
-             * @var $type ReflectionNamedType
-             */
+            /* @var $type ReflectionNamedType */
             $type = $property->getType();
             if ($type->isBuiltin()) {
                 settype($row[$property->name], $type->getName());

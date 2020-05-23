@@ -8,19 +8,20 @@
 namespace App;
 
 use App\DB\EmailEntityManager;
+use App\DB\MysqlQueryFactory;
 use App\Entity\Email;
 use App\Entity\VerifyStatus;
 use App\SmtpVerifier\ConnectionPool;
 use App\SmtpVerifier\Connector;
 use App\Stream\ReadableStreamWrapperTrait;
 use Aura\SqlQuery\Common\SelectInterface;
-use Aura\SqlQuery\QueryFactory;
 use Clue\React\Socks\Client as SocksClient;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
 use React\Dns\Config\Config as DnsConfig;
+use React\Dns\Resolver\ResolverInterface;
 use React\EventLoop\LoopInterface;
 use React\MySQL\ConnectionInterface;
 use React\MySQL\Factory;
@@ -293,11 +294,11 @@ class App
     }
 
     /**
-     * @param $loop
+     * @param LoopInterface $loop
      *
      * @return LoggerInterface
      */
-    public function getLogger($loop): LoggerInterface
+    public function getLogger(LoopInterface $loop): LoggerInterface
     {
         if ($this->quiet) {
             return new NullLogger();
@@ -322,18 +323,18 @@ class App
     }
 
     /**
-     * @param $loop
+     * @param LoopInterface   $loop
      * @param LoggerInterface $logger
      *
      * @return EmailEntityManager
      */
-    public function getEntityManager($loop, LoggerInterface $logger): EmailEntityManager
+    public function getEntityManager(LoopInterface $loop, LoggerInterface $logger): EmailEntityManager
     {
         $entityManager = new EmailEntityManager(
             $this->getConfig('DB_EMAIL_TABLE_NAME', 'email'),
             $this->getReadDbConnection($loop),
             $this->getWriteDbConnection($loop),
-            new QueryFactory('mysql')
+            new MysqlQueryFactory()
         );
         $entityManager->setLogger($logger);
 
@@ -490,7 +491,7 @@ class App
     }
 
     /**
-     * @param $resolver
+     * @param ResolverInterface        $resolver
      * @param SocketConnectorInterface $connector
      * @param LoggerInterface          $logger
      * @param LoopInterface            $loop
@@ -498,7 +499,7 @@ class App
      * @return Verifier
      */
     public function getVerifier(
-        $resolver,
+        ResolverInterface $resolver,
         SocketConnectorInterface $connector,
         LoggerInterface $logger,
         LoopInterface $loop

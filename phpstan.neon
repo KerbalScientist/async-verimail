@@ -6,6 +6,9 @@ parameters:
         classesNotRequiredToBeAbstractOrFinal: []
         interfacesImplementedByContainers:
             - Psr\Container\ContainerInterface
+    ignoreErrors:
+        # \ReflectionProperty::getType() returns ReflectionNamedType, not ReflectionType.
+        - "#Call to an undefined method ReflectionType::getName\\(\\)#"
 
 parametersSchema:
     ergebnis: structure([

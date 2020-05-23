@@ -101,7 +101,7 @@ class Verifier implements LoggerAwareInterface
      * @param LoopInterface $loop
      * @param array         $pipeOptions Options, passed to `App::pipeThrough()`
      *
-     * @return DuplexStreamInterface<Email>
+     * @return DuplexStreamInterface duplex stream of Email entities at both readable and writable sides
      */
     public function createVerifyingStream(LoopInterface $loop, $pipeOptions = []): DuplexStreamInterface
     {

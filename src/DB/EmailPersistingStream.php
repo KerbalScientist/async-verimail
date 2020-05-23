@@ -9,7 +9,6 @@ namespace App\DB;
 
 use App\Entity\Email;
 use Aura\SqlQuery\Mysql\Insert as MysqlInsert;
-use Aura\SqlQuery\QueryFactory;
 use Aura\SqlQuery\QueryInterface;
 use DateTimeImmutable;
 use Evenement\EventEmitterTrait;
@@ -36,7 +35,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
     private HydrationStrategyInterface $hydrationStrategy;
     private string $tableName;
     private bool $closed = false;
-    private QueryFactory $queryFactory;
+    private MysqlQueryFactory $queryFactory;
     private bool $bufferIsFull = false;
     private bool $insertIgnore;
     private bool $drain = false;
@@ -45,12 +44,12 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
      * EmailPersistingStream constructor.
      *
      * @param ConnectionInterface $connection
-     * @param QueryFactory        $queryFactory
+     * @param MysqlQueryFactory   $queryFactory
      * @param array               $settings
      */
     public function __construct(
         ConnectionInterface $connection,
-        QueryFactory $queryFactory,
+        MysqlQueryFactory $queryFactory,
         array $settings = []
     ) {
         $this->connection = $connection;
@@ -119,9 +118,6 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
 
     private function createInsertQuery(array $emails): MysqlInsert
     {
-        /**
-         * @var $query MysqlInsert
-         */
         $query = $this->queryFactory->newInsert();
         $query->into($this->tableName);
         foreach ($emails as $email) {

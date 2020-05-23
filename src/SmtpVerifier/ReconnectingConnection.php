@@ -21,7 +21,7 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
     use LoggerAwareTrait;
 
     /**
-     * @var PromiseInterface<ConnectorInterface>
+     * @var PromiseInterface resolves to ConnectorInterface
      */
     private PromiseInterface $innerConnectionPromise;
     private ?ConnectionInterface $innerConnection;

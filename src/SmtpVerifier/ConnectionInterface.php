@@ -20,14 +20,14 @@ interface ConnectionInterface extends EventEmitterInterface
     /**
      * @param string $email
      *
-     * @return PromiseInterface<bool>
+     * @return PromiseInterface resolves to Message
      */
     public function sendVerifyRecipient(string $email): PromiseInterface;
 
     /**
      * Checks if server replies ok on non-existent emails.
      *
-     * @return PromiseInterface<bool>
+     * @return PromiseInterface resolves to bool
      */
     public function isReliable(): PromiseInterface;
 
