@@ -6,15 +6,6 @@ parameters:
         classesNotRequiredToBeAbstractOrFinal: []
         interfacesImplementedByContainers:
             - Psr\Container\ContainerInterface
-    ignoreErrors:
-        # PHPStan implies return value of PDO::exec() is always int,
-        #   but it actually returns false on error when PDO::ATTR_ERRMODE
-        #   is set to any except PDO::ERRMODE_EXCEPTION
-        -
-            message: "#Strict comparison using === between false and int will always evaluate to false#"
-            path: "src/Study/OrderByFilesort.php"
-        # PHPStan bug. It doesn't accept AnyType<AnyType> for getIterator().
-        - "#Method App\\\\Benchmark\\\\StatsParams\\\\StatsParamsCollection::getIterator\\(\\) return type has no value type specified in iterable type Traversable\\<mixed, mixed\\>#"
 
 parametersSchema:
     ergebnis: structure([

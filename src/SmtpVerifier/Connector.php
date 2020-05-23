@@ -94,7 +94,7 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
                     throw $e;
                 }
 
-                throw new RuntimeException('Unable to connect to any MX server.', 0, $e);
+                throw new RuntimeException("Unable to connect to any MX server for $hostname.", 0, $e);
             })
             ->then(function ($result) use ($hostname) {
                 if ($result instanceof VerifierConnectionInterface) {

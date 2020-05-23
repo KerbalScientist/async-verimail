@@ -445,7 +445,7 @@ class App
         $persistingStream->on('error', function ($error) use ($deferred) {
             $deferred->reject($error);
         });
-        $persistingStream->on('close', function () use ($deferred, $loop) {
+        $persistingStream->on('close', function () use ($deferred) {
             $deferred->resolve();
         });
 
