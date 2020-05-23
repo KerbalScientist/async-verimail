@@ -20,7 +20,7 @@ class Mutex
 {
     private LoopInterface $eventLoop;
     /**
-     * @var Promise[]
+     * @var PromiseInterface[]
      */
     private array $onceLocks;
 

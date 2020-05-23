@@ -8,7 +8,6 @@
 namespace App\Throttling;
 
 use App\Stream\ReadableStreamWrapperTrait;
-use React\Promise\PromiseInterface;
 use React\Stream\ReadableStreamInterface;
 use SplObjectStorage;
 use function React\Promise\all;
@@ -22,7 +21,7 @@ class ThrottlingReadStreamWrapper implements ReadableStreamInterface
     private float $minIntervalSeconds;
     private float $bufferSize;
     /**
-     * @var SplObjectStorage<PromiseInterface>
+     * @var SplObjectStorage
      */
     private SplObjectStorage $buffer;
     private ClosureWrapper $emitWrapper;

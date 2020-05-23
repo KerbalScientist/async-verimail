@@ -24,7 +24,7 @@ class MysqlQueryFactory extends \Aura\SqlQuery\QueryFactory
      */
     public function newDelete()
     {
-        return parent::newDelete();
+        return $this->newInstance('Delete');
     }
 
     /**
@@ -32,7 +32,7 @@ class MysqlQueryFactory extends \Aura\SqlQuery\QueryFactory
      */
     public function newInsert()
     {
-        return parent::newInsert();
+        return $this->newInstance('Insert');
     }
 
     /**
@@ -40,7 +40,7 @@ class MysqlQueryFactory extends \Aura\SqlQuery\QueryFactory
      */
     public function newSelect()
     {
-        return parent::newSelect();
+        return $this->newInstance('Select');
     }
 
     /**
@@ -48,6 +48,21 @@ class MysqlQueryFactory extends \Aura\SqlQuery\QueryFactory
      */
     public function newUpdate()
     {
-        return parent::newUpdate();
+        return $this->newInstance('Update');
+    }
+
+    /**
+     * @param string $query
+     *
+     * @return Delete|Insert|Select|Update
+     */
+    protected function newInstance($query)
+    {
+        $class = "Aura\SqlQuery\\{$this->db}\\{$query}";
+
+        return new $class(
+            $this->getQuoter(),
+            $this->newSeqBindPrefix()
+        );
     }
 }
