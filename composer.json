@@ -24,7 +24,7 @@
         ]
     },
     "scripts": {
-        "run-app": "php src/run.php",
+        "app:run": "php src/run.php",
         "test:ecs": "vendor/bin/ecs check",
         "fix:ecs": "vendor/bin/ecs check --fix"
     }
