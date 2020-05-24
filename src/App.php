@@ -96,7 +96,7 @@ class App
      */
     private float $connectTimeout = 30;
     private ?string $proxy = null;
-    private string $emailFrom = 'info@clockshop.ru';
+    private string $fromEmail = 'info@clockshop.ru';
 
     /**
      * @param string[]|null $args
@@ -512,7 +512,7 @@ class App
              * @todo Hardcoded. Move to config.
              */
             '*' => [
-                'emailFrom' => $this->emailFrom,
+                'fromEmail' => $this->fromEmail,
                 'resetAfterVerifications' => 1,
             ],
             'yandex.ru' => [
@@ -625,7 +625,7 @@ class App
      */
     public function setOptionEmailFrom(string $emailFrom): void
     {
-        $this->emailFrom = $emailFrom;
+        $this->fromEmail = $emailFrom;
     }
 
     /**
