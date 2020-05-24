@@ -14,8 +14,11 @@ use App\Entity\VerifyStatus;
 use App\SmtpVerifier\ConnectionPool;
 use App\SmtpVerifier\Connector;
 use App\Stream\ReadableStreamWrapperTrait;
+use App\Stream\ThroughStream;
 use Aura\SqlQuery\Common\SelectInterface;
 use Clue\React\Socks\Client as SocksClient;
+use Evenement\EventEmitterInterface;
+use Evenement\EventEmitterTrait;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -30,7 +33,6 @@ use React\Promise\PromiseInterface;
 use React\Socket\ConnectorInterface as SocketConnectorInterface;
 use React\Stream\ReadableStreamInterface;
 use React\Stream\WritableResourceStream;
-use React\Stream\WritableStreamInterface;
 use ReactPHP\MySQL\Decorator\BindAssocParamsConnectionDecorator;
 use ReflectionClass;
 use ReflectionException;
@@ -38,6 +40,7 @@ use ReflectionMethod;
 use Throwable;
 use WyriHaximus\React\PSR3\Stdio\StdioLogger;
 use function React\Promise\all;
+use function React\Promise\resolve;
 use const STDERR;
 
 /**
@@ -45,8 +48,10 @@ use const STDERR;
  *
  * @todo God object. Commands container + service container + arguments parser.
  */
-class App
+class App implements EventEmitterInterface
 {
+    use EventEmitterTrait;
+
     const EXIT_CODE_OK = 0;
     const EXIT_CODE_ERROR = 1;
 
@@ -60,7 +65,6 @@ class App
     private bool $verbose = false;
     private bool $quiet = false;
     private LoggerInterface $logger;
-    private ?WritableStreamInterface $loggerStream;
     /**
      * @var mixed[]
      */
@@ -71,7 +75,7 @@ class App
     /**
      * @var PromiseInterface[]
      */
-    private array $resolveBeforeInterrupt = [];
+    private array $resolveBeforeStop = [];
     /**
      * @var int[]
      */
@@ -105,6 +109,7 @@ class App
      */
     public function run(?array $args = null): int
     {
+        $this->emit('start');
         if (is_null($args)) {
             $args = $GLOBALS['argv'];
         }
@@ -122,11 +127,8 @@ class App
             $loop = $this->getEventLoop();
             $this->getEventLoop()
                 ->addSignal(SIGINT, function () use ($loop) {
-                    all($this->resolveBeforeInterrupt)
-                        ->then(function () use ($loop) {
-                            echo 'Stopped by user.'.PHP_EOL;
-                            $this->stop($loop);
-                        });
+                    echo 'Stopped by user.'.PHP_EOL;
+                    $this->stop($loop);
                 });
 
             return $this->runCommand($command, $args);
@@ -136,6 +138,8 @@ class App
             } else {
                 echo "Error: {$e->getMessage()}".PHP_EOL;
             }
+        } finally {
+            $this->emit('afterStop');
         }
 
         return self::EXIT_CODE_ERROR;
@@ -189,15 +193,25 @@ class App
         return $this->eventLoop;
     }
 
-    private function stop(LoopInterface $loop): void
+    private function resolveBeforeStop(PromiseInterface $promise): void
     {
-        if ($this->loggerStream) {
-            $this->loggerStream->end();
+        $this->resolveBeforeStop[] = $promise;
+    }
+
+    private function stop(LoopInterface $loop, bool $force = false): void
+    {
+        $this->emit('beforeStop');
+        if ($force || !$this->resolveBeforeStop) {
+            $promise = resolve();
+        } else {
+            $promise = all($this->resolveBeforeStop);
         }
-        $loop->stop();
-        $loop->futureTick(function () use ($loop) {
-            $loop->stop();
-        });
+        $stop = function () use ($loop) {
+            $loop->addTimer(3, function () use ($loop) {
+                $loop->stop();
+            });
+        };
+        $promise->then($stop, $stop);
     }
 
     /**
@@ -307,12 +321,20 @@ class App
             return new NullLogger();
         }
         if (!isset($this->logger)) {
+            $dumping = new ThroughStream(function ($data) {
+                return $data;
+            });
+            $loggerStream = new WritableResourceStream(STDERR, $loop);
+            $dumping->pipe($loggerStream);
+            $loggerStream = $dumping;
+            $this->on('afterStop', function () use ($loggerStream) {
+                $loggerStream->end();
+            });
             /*
              * @todo Using internal StdioLogger constructor to write to STDERR. Replace by own logger.
              */
-            $this->loggerStream = new WritableResourceStream(STDERR, $loop);
             $this->logger = (new LevelFilteringLogger(
-                (new StdioLogger($this->loggerStream))
+                (new StdioLogger($loggerStream))
                     ->withNewLine(true)
             ));
             if (!$this->verbose) {
@@ -452,11 +474,12 @@ class App
         $persistingStream->on('close', function () use ($deferred) {
             $deferred->resolve();
         });
-
-        $this->getEventLoop()
-            ->addSignal(SIGINT, function () use ($persistingStream) {
-                $this->resolveBeforeInterrupt[] = $persistingStream->flush();
-            });
+        $this->on('beforeStop', function () use ($persistingStream, $queryStream, $verifyingStream) {
+            $this->resolveBeforeStop($persistingStream->flush());
+            $persistingStream->close();
+            $verifyingStream->close();
+            $queryStream->close();
+        });
 
         $count = 0;
         $timeStart = null;
@@ -571,8 +594,10 @@ class App
              */
             protected function filterData(Email $email): ?array
             {
-                return ["$email->i_id $email->m_mail $email->s_status ({$email->s_status->getDescription()})".
-                    " {$email->dt_updated->format(DATE_ATOM)}".PHP_EOL, ];
+                return [
+                    "$email->i_id $email->m_mail $email->s_status ({$email->s_status->getDescription()})".
+                    " {$email->dt_updated->format(DATE_ATOM)}".PHP_EOL,
+                ];
             }
         };
         $deferred = new Deferred();

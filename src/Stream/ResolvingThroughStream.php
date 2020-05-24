@@ -113,13 +113,8 @@ class ResolvingThroughStream extends EventEmitter implements DuplexStreamInterfa
         $this->paused = true;
         $this->drain = false;
         $this->buffer = [];
-
-        $close = function () {
-            $this->flush(true);
-            $this->emit('close');
-            $this->removeAllListeners();
-        };
-        all($this->promiseBuffer)
-            ->then($close, $close);
+        $this->flush(true);
+        $this->emit('close');
+        $this->removeAllListeners();
     }
 }
