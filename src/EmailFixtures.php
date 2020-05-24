@@ -16,6 +16,9 @@ use React\Promise\PromiseInterface;
 
 class EmailFixtures
 {
+    /**
+     * @var int[]
+     */
     private array $domains = [
         'mail.ru' => 10,
         'bk.ru' => 5,
@@ -53,7 +56,7 @@ class EmailFixtures
         $this->loop = $loop;
     }
 
-    public function generate($count): PromiseInterface
+    public function generate(int $count): PromiseInterface
     {
         $deferred = new Deferred();
         $paused = false;
@@ -99,7 +102,7 @@ class EmailFixtures
         return $deferred->promise();
     }
 
-    private function generateEmail()
+    private function generateEmail(): string
     {
         $length = rand($this->maxUserLength, $this->minUserLength);
         $username = '';

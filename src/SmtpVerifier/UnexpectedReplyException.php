@@ -14,7 +14,7 @@ class UnexpectedReplyException extends RuntimeException
 {
     private Message $smtpMessage;
 
-    public function __construct(Message $smtpMessage, array $expectedCodes, $code = 0, Throwable $previous = null)
+    public function __construct(Message $smtpMessage, array $expectedCodes, int $code = 0, Throwable $previous = null)
     {
         $this->smtpMessage = $smtpMessage;
         parent::__construct("Unexpected server reply: $smtpMessage->data.".

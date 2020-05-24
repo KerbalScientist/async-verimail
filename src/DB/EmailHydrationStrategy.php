@@ -19,7 +19,13 @@ use ReflectionProperty;
 class EmailHydrationStrategy implements HydrationStrategyInterface
 {
     private ReflectionClass $class;
+    /**
+     * @var mixed[]
+     */
     private array $constructorParams;
+    /**
+     * @var int[]
+     */
     private array $rowFields = [];
     private string $dateFormat = EmailEntityManager::DATE_FORMAT_DB;
 
@@ -27,7 +33,7 @@ class EmailHydrationStrategy implements HydrationStrategyInterface
      * PublicFieldsHydrationStrategy constructor.
      *
      * @param ReflectionClass $class
-     * @param array           $constructorParams
+     * @param mixed[]         $constructorParams
      */
     public function __construct(ReflectionClass $class, array $constructorParams = [])
     {
@@ -36,7 +42,7 @@ class EmailHydrationStrategy implements HydrationStrategyInterface
     }
 
     /**
-     * @param array $rowFields
+     * @param string[] $rowFields
      */
     public function setRowFields(array $rowFields): void
     {

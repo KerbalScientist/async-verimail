@@ -135,7 +135,7 @@ final class Message
     /**
      * @throws SenderBlockedException|OverQuotaException|AuthenticationRequiredException|UnexpectedReplyException|TooManyRecipientsException
      */
-    public function throwSenderStatusException()
+    public function throwSenderStatusException(): void
     {
         if (self::STATE_OK !== $this->connectionState) {
             $message = 'Server reply: '.$this->data;

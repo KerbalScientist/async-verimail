@@ -22,6 +22,9 @@ trait BufferedThroughStreamTrait
     private bool $closed = false;
     private bool $paused = false;
     private bool $drain = false;
+    /**
+     * @var mixed[]
+     */
     private array $buffer = [];
     private LoopInterface $eventLoop;
 
@@ -35,18 +38,18 @@ trait BufferedThroughStreamTrait
         $this->eventLoop = $eventLoop;
     }
 
-    public function pause()
+    public function pause(): void
     {
         $this->paused = true;
     }
 
-    public function resume()
+    public function resume(): void
     {
         $this->paused = false;
         $this->flush();
     }
 
-    public function flush($ignorePaused = false)
+    public function flush(bool $ignorePaused = false): void
     {
         while (count($this->buffer) && ($ignorePaused || !$this->paused)) {
             try {
@@ -83,22 +86,37 @@ trait BufferedThroughStreamTrait
         $this->removeAllListeners();
     }
 
+    /**
+     * @param WritableStreamInterface $dest
+     * @param array                   $options
+     *
+     * @return WritableStreamInterface
+     */
     public function pipe(WritableStreamInterface $dest, array $options = array())
     {
         /* @noinspection PhpParamsInspection */
         return Util::pipe($this, $dest, $options);
     }
 
+    /**
+     * @return bool
+     */
     public function isReadable()
     {
         return $this->readable;
     }
 
+    /**
+     * @return bool
+     */
     public function isWritable()
     {
         return $this->writable;
     }
 
+    /**
+     * @param mixed $data
+     */
     public function end($data = null)
     {
         if (!$this->writable) {
@@ -124,6 +142,11 @@ trait BufferedThroughStreamTrait
         $this->close();
     }
 
+    /**
+     * @param mixed $data
+     *
+     * @return bool
+     */
     public function write($data)
     {
         if (!$this->writable) {

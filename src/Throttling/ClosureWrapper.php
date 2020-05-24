@@ -34,6 +34,11 @@ class ClosureWrapper
         $this->minIntervalSeconds = $minIntervalSeconds;
     }
 
+    /**
+     * @param mixed ...$args
+     *
+     * @return PromiseInterface
+     */
     public function __invoke(...$args): PromiseInterface
     {
         $time = microtime(true);

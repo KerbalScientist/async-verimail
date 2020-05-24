@@ -44,12 +44,14 @@ class Mutex
         $this->eventLoop = $eventLoop;
     }
 
+    /**
+     * @param mixed         $mutexKey
+     * @param callable|null $callback
+     * @param mixed         ...$args
+     *
+     * @return PromiseInterface
+     */
     public function enqueue($mutexKey, callable $callback = null, ...$args): PromiseInterface
-    {
-        return $this->enqueueTick($mutexKey, $callback, ...$args);
-    }
-
-    private function enqueueTick($mutexKey, callable $callback = null, ...$args): PromiseInterface
     {
         $mutexKey = $this->getMutexKey($mutexKey);
         $deferred = new Deferred();
@@ -68,6 +70,8 @@ class Mutex
      * @param mixed $mixedKey
      *
      * @return string
+     *
+     * @todo Can be reused by other projects. Move to another project.
      */
     public function getMutexKey($mixedKey): string
     {
@@ -95,7 +99,7 @@ class Mutex
         return '#sz:'.serialize($mixedKey);
     }
 
-    private function runTickFunction(string $mutexKey)
+    private function runTickFunction(string $mutexKey): void
     {
         if (isset($this->tickCallbacks[$mutexKey])) {
             return;
@@ -139,7 +143,7 @@ class Mutex
         ($this->tickCallbacks[$mutexKey])();
     }
 
-    private function futureTick($mutexKey)
+    private function futureTick(string $mutexKey): void
     {
         if (isset($this->tickCallbacks[$mutexKey])) {
             $this->eventLoop->futureTick($this->tickCallbacks[$mutexKey]);

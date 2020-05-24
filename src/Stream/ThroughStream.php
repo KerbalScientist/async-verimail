@@ -34,8 +34,16 @@ final class ThroughStream extends EventEmitter implements DuplexStreamInterface
     private bool $closed = false;
     private bool $paused = false;
     private bool $drain = false;
+    /**
+     * @var callable|null
+     */
     private $callback;
 
+    /**
+     * ThroughStream constructor.
+     *
+     * @param callable|null $callback
+     */
     public function __construct($callback = null)
     {
         if (null !== $callback && !is_callable($callback)) {
@@ -45,11 +53,17 @@ final class ThroughStream extends EventEmitter implements DuplexStreamInterface
         $this->callback = $callback;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function pause()
     {
         $this->paused = true;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function resume()
     {
         $this->paused = false;
@@ -59,21 +73,33 @@ final class ThroughStream extends EventEmitter implements DuplexStreamInterface
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function pipe(WritableStreamInterface $dest, array $options = array())
     {
         return Util::pipe($this, $dest, $options);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function isReadable()
     {
         return $this->readable;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function isWritable()
     {
         return $this->writable;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function end($data = null)
     {
         if (!$this->writable) {
@@ -98,6 +124,9 @@ final class ThroughStream extends EventEmitter implements DuplexStreamInterface
         $this->close();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function write($data)
     {
         if (!$this->writable) {
@@ -126,6 +155,9 @@ final class ThroughStream extends EventEmitter implements DuplexStreamInterface
         return true;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function close()
     {
         if ($this->closed) {

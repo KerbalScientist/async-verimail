@@ -61,6 +61,9 @@ class App
     private bool $quiet = false;
     private LoggerInterface $logger;
     private ?WritableStreamInterface $loggerStream;
+    /**
+     * @var mixed[]
+     */
     private array $filter = [
         's_status' => VerifyStatus::UNKNOWN,
     ];
@@ -96,7 +99,7 @@ class App
     private string $emailFrom = 'info@clockshop.ru';
 
     /**
-     * @param array|null $args
+     * @param string[]|null $args
      *
      * @return int exit code
      */
@@ -177,7 +180,7 @@ class App
         return $result;
     }
 
-    public function getEventLoop()
+    public function getEventLoop(): LoopInterface
     {
         if (empty($this->eventLoop)) {
             $this->eventLoop = \React\EventLoop\Factory::create();
@@ -198,8 +201,8 @@ class App
     }
 
     /**
-     * @param string $name
-     * @param array  $args
+     * @param string   $name
+     * @param string[] $args
      *
      * @return int exit code
      *
@@ -241,7 +244,7 @@ class App
     }
 
     /**
-     * @return array
+     * @return string[]
      *
      * @throws ReflectionException
      */
@@ -284,7 +287,7 @@ class App
         return $camel;
     }
 
-    public function installCommand()
+    public function installCommand(): PromiseInterface
     {
         $loop = $this->getEventLoop();
         $logger = $this->getLogger($loop);
@@ -345,7 +348,7 @@ class App
      * @param string $name
      * @param mixed  $default
      *
-     * @return array|false|string|null
+     * @return mixed
      */
     public function getConfig(string $name, $default = null)
     {
@@ -357,7 +360,7 @@ class App
         return $value;
     }
 
-    public function getReadDbConnection($loop): ConnectionInterface
+    public function getReadDbConnection(LoopInterface $loop): ConnectionInterface
     {
         return $this->createDbConnection($loop);
     }
@@ -380,12 +383,12 @@ class App
         );
     }
 
-    public function getWriteDbConnection($loop): ConnectionInterface
+    public function getWriteDbConnection(LoopInterface $loop): ConnectionInterface
     {
         return self::createDbConnection($loop);
     }
 
-    public function importCommand($filename): PromiseInterface
+    public function importCommand(string $filename): PromiseInterface
     {
         $loop = $this->getEventLoop();
         $logger = $this->getLogger($loop);
@@ -394,7 +397,7 @@ class App
         return $entityManager->importFromCsvBlocking($filename);
     }
 
-    public function exportCommand($filename): PromiseInterface
+    public function exportCommand(string $filename): PromiseInterface
     {
         $loop = $this->getEventLoop();
         $logger = $this->getLogger($loop);
@@ -551,7 +554,7 @@ class App
         return $entityManager->createSelectQuery($this->filter);
     }
 
-    public function showCommand($minInterval = 0): PromiseInterface
+    public function showCommand(string $minInterval = '0'): PromiseInterface
     {
         $minInterval = (float) $minInterval;
         $loop = $this->getEventLoop();
@@ -589,14 +592,14 @@ class App
         return $deferred->promise();
     }
 
-    public function generateFixturesCommand($count = 1000): PromiseInterface
+    public function generateFixturesCommand(string $count = '1000'): PromiseInterface
     {
         $loop = $this->getEventLoop();
         $logger = $this->getLogger($loop);
         $entityManager = $this->getEntityManager($loop, $logger);
         $fixtures = new EmailFixtures($entityManager, $loop);
 
-        return $fixtures->generate($count);
+        return $fixtures->generate((int) $count);
     }
 
     public function setOptionVerbose(bool $verbose): void

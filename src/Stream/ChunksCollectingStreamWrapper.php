@@ -17,6 +17,9 @@ class ChunksCollectingStreamWrapper implements ReadableStreamInterface, Promisor
     use ReadableStreamWrapperTrait;
     use ReadableStreamIteratorTrait;
 
+    /**
+     * @var mixed[]
+     */
     private array $buffer = [];
     private int $chunkSize;
     private bool $singleArg;
@@ -25,7 +28,7 @@ class ChunksCollectingStreamWrapper implements ReadableStreamInterface, Promisor
      * CollectsChunksReadableTrait constructor.
      *
      * @param ReadableStreamInterface $innerStream
-     * @param array                   $settings
+     * @param mixed[]                 $settings
      */
     public function __construct(ReadableStreamInterface $innerStream, array $settings = [])
     {
@@ -38,13 +41,15 @@ class ChunksCollectingStreamWrapper implements ReadableStreamInterface, Promisor
     /**
      * {@inheritdoc}
      */
-    public function isReadable()
+    public function isReadable(): bool
     {
         return $this->innerStream->isReadable() || $this->buffer;
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @param mixed ...$args
      */
     protected function filterData(...$args): ?array
     {
@@ -76,7 +81,7 @@ class ChunksCollectingStreamWrapper implements ReadableStreamInterface, Promisor
     /**
      * {@inheritdoc}
      */
-    protected function forwardReadEvents()
+    protected function forwardReadEvents(): void
     {
         $this->innerStream->on('close', function () {
             $this->flush();

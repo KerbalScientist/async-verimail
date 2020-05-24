@@ -25,13 +25,16 @@ class Factory
         $this->eventLoop = $eventLoop;
     }
 
-    public function closure(Closure $closure, float $minIntervalSeconds)
+    public function closure(Closure $closure, float $minIntervalSeconds): ClosureWrapper
     {
         return new ClosureWrapper($closure, $this->eventLoop, $minIntervalSeconds);
     }
 
-    public function readableStream(ReadableStreamInterface $innerStream, $minIntervalSeconds, $bufferSize = 1)
-    {
+    public function readableStream(
+        ReadableStreamInterface $innerStream,
+        float $minIntervalSeconds,
+        int $bufferSize = 1
+    ): ThrottlingReadStreamWrapper {
         return new ThrottlingReadStreamWrapper($innerStream, $this, [
             'minIntervalSeconds' => $minIntervalSeconds,
             'bufferSize' => $bufferSize,

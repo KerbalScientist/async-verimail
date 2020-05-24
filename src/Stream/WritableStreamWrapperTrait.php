@@ -23,7 +23,7 @@ trait WritableStreamWrapperTrait
         $this->initWrapper($innerStream);
     }
 
-    protected function initWrapper(WritableStreamInterface $innerStream)
+    protected function initWrapper(WritableStreamInterface $innerStream): void
     {
         if (!$innerStream->isWritable()) {
             $this->close();
@@ -37,7 +37,7 @@ trait WritableStreamWrapperTrait
     /**
      * @see WritableStreamInterface
      */
-    public function close()
+    public function close(): void
     {
         if ($this->closed) {
             return;

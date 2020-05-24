@@ -19,34 +19,22 @@ class MysqlQueryFactory extends \Aura\SqlQuery\QueryFactory
         parent::__construct('mysql', null);
     }
 
-    /**
-     * @return Delete
-     */
-    public function newDelete()
+    public function newDelete(): Delete
     {
         return $this->newInstance('Delete');
     }
 
-    /**
-     * @return Insert
-     */
-    public function newInsert()
+    public function newInsert(): Insert
     {
         return $this->newInstance('Insert');
     }
 
-    /**
-     * @return Select
-     */
-    public function newSelect()
+    public function newSelect(): Select
     {
         return $this->newInstance('Select');
     }
 
-    /**
-     * @return Update
-     */
-    public function newUpdate()
+    public function newUpdate(): Update
     {
         return $this->newInstance('Update');
     }

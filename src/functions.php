@@ -15,10 +15,14 @@ use React\Stream\WritableStreamInterface;
  * @param ReadableStreamInterface $source
  * @param WritableStreamInterface $target
  * @param DuplexStreamInterface[] $through
- * @param array                   $options
+ * @param mixed[]                 $options
  */
-function pipeThrough(ReadableStreamInterface $source, array $through, WritableStreamInterface $target, $options = [])
-{
+function pipeThrough(
+    ReadableStreamInterface $source,
+    array $through,
+    WritableStreamInterface $target,
+    array $options = []
+): void {
     $current = $source;
     array_push($through, $target);
     foreach ($through as $item) {

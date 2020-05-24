@@ -48,6 +48,10 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
      *     Though it is working for HELO and MAIL FROM commands, sometimes servers send not all of the replies.
      *     Also, replies is often sent in random order.
      */
+
+    /**
+     * @var Deferred[]
+     */
     private array $replyDeferred = [];
     private string $replyBuffer = '';
     private string $fromHost;
@@ -66,7 +70,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
      * @param ConnectionInterface $connection
      * @param Mutex               $mutex
      * @param string              $hostname
-     * @param array               $settings
+     * @param mixed[]             $settings
      */
     public function __construct(ConnectionInterface $connection, Mutex $mutex, string $hostname, array $settings)
     {

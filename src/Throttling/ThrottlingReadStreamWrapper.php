@@ -26,7 +26,14 @@ class ThrottlingReadStreamWrapper implements ReadableStreamInterface
     private SplObjectStorage $buffer;
     private ClosureWrapper $emitWrapper;
 
-    public function __construct(ReadableStreamInterface $innerStream, Factory $throttlingFactory, $settings)
+    /**
+     * ThrottlingReadStreamWrapper constructor.
+     *
+     * @param ReadableStreamInterface $innerStream
+     * @param Factory                 $throttlingFactory
+     * @param mixed[]                 $settings
+     */
+    public function __construct(ReadableStreamInterface $innerStream, Factory $throttlingFactory, array $settings)
     {
         $this->emitWrapper = $throttlingFactory->closure(function ($event, array $arguments = []) {
             $this->parentEmit($event, $arguments);
@@ -36,7 +43,13 @@ class ThrottlingReadStreamWrapper implements ReadableStreamInterface
         $this->initWrapper($innerStream);
     }
 
-    public function emit($event, array $arguments = [])
+    /**
+     * {@inheritdoc}
+     *
+     * @param string  $event
+     * @param mixed[] $arguments
+     */
+    public function emit($event, array $arguments = []): void
     {
         $emit = function () use ($event, $arguments) {
             $this->parentEmit($event, $arguments);
@@ -66,6 +79,10 @@ class ThrottlingReadStreamWrapper implements ReadableStreamInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param mixed ...$args
+     *
+     * @return mixed[]|null
      */
     protected function filterData(...$args): ?array
     {

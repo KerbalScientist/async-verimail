@@ -28,7 +28,7 @@ trait ReadableStreamWrapperTrait
         $this->initWrapper($innerStream);
     }
 
-    protected function initWrapper(ReadableStreamInterface $innerStream)
+    protected function initWrapper(ReadableStreamInterface $innerStream): void
     {
         $this->innerStream = $innerStream;
         $this->forwardReadEvents();
@@ -44,7 +44,7 @@ trait ReadableStreamWrapperTrait
     /**
      * Forwards events from innerStream to this stream.
      */
-    protected function forwardReadEvents()
+    protected function forwardReadEvents(): void
     {
         Util::forwardEvents($this->innerStream, $this, ['end', 'error', 'close']);
     }
@@ -55,7 +55,7 @@ trait ReadableStreamWrapperTrait
      *
      * @param mixed ...$args
      *
-     * @return array|null
+     * @return mixed[]|null
      */
     abstract protected function filterData(...$args): ?array;
 

@@ -33,6 +33,9 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
     private ResolverInterface $resolver;
     private ConnectorInterface $connector;
     private Mutex $mutex;
+    /**
+     * @var mixed[]
+     */
     private array $connectionSettings;
 
     /**
@@ -41,7 +44,7 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
      * @param ResolverInterface  $resolver
      * @param ConnectorInterface $connector
      * @param Mutex              $mutex
-     * @param array              $connectionSettings
+     * @param mixed[]            $connectionSettings
      */
     public function __construct(
         ResolverInterface $resolver,
@@ -119,7 +122,7 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
             });
     }
 
-    private function resolveMxRecords(string $hostname)
+    private function resolveMxRecords(string $hostname): PromiseInterface
     {
         $callback = function ($result) use ($hostname) {
             $error = null;

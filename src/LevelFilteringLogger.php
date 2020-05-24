@@ -14,13 +14,17 @@ use Psr\Log\LogLevel;
 class LevelFilteringLogger extends AbstractLogger implements LoggerInterface
 {
     private LoggerInterface $innerLogger;
+
+    /**
+     * @var string[]
+     */
     private array $showLevels;
 
     /**
      * LevelFilteringLogger constructor.
      *
      * @param LoggerInterface $innerLogger
-     * @param array           $showLevels
+     * @param string[]        $showLevels
      */
     public function __construct(LoggerInterface $innerLogger, ?array $showLevels = null)
     {

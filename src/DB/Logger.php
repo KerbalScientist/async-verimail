@@ -88,7 +88,13 @@ class Logger implements LoggerInterface
         $this->innerLogger->debug($message, $context);
     }
 
-    public function debugQuery(string $sql, array $bindValues = [], string $append = '', $context = array())
+    /**
+     * @param string  $sql
+     * @param array   $bindValues
+     * @param string  $append
+     * @param mixed[] $context
+     */
+    public function debugQuery(string $sql, array $bindValues = [], string $append = '', array $context = array()): void
     {
         $this->innerLogger->log(
             LogLevel::DEBUG,

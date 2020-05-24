@@ -38,7 +38,7 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
      * @param ConnectionInterface $connection
      * @param ConnectorInterface  $connector
      * @param string              $hostname
-     * @param array               $settings
+     * @param mixed[]             $settings
      *
      * @todo Events pipe.
      */
@@ -77,6 +77,12 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
         return $this->callConnectionPromiseMethod('sendVerifyRecipient', $email);
     }
 
+    /**
+     * @param string $methodName
+     * @param mixed  ...$args
+     *
+     * @return PromiseInterface
+     */
     private function callConnectionPromiseMethod(string $methodName, ...$args): PromiseInterface
     {
         $result = $this->innerConnectionPromise

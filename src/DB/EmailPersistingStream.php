@@ -29,7 +29,13 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
 
     private int $insertBufferSize;
     private int $updateBufferSize;
+    /**
+     * @var Email[]
+     */
     private array $insertBuffer = [];
+    /**
+     * @var Email[]
+     */
     private array $updateBuffer = [];
     private ConnectionInterface $connection;
     private HydrationStrategyInterface $hydrationStrategy;
@@ -45,7 +51,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
      *
      * @param ConnectionInterface $connection
      * @param MysqlQueryFactory   $queryFactory
-     * @param array               $settings
+     * @param mixed[]             $settings
      */
     public function __construct(
         ConnectionInterface $connection,
@@ -135,11 +141,11 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
     /**
      * @param QueryInterface $query
      *
-     * @return array
+     * @return mixed[]
      *
      * @todo Replace with Query decorator.
      */
-    private function getBindValues(QueryInterface $query)
+    private function getBindValues(QueryInterface $query): array
     {
         $result = [];
         foreach ($query->getBindValues() as $key => $value) {
@@ -230,8 +236,11 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
                 new InvalidArgumentException('Invalid Email entity given.'),
             ]);
         }
-
-        $this->persist($data);
+        if (is_null($data->i_id)) {
+            $this->insertBuffer[] = $data;
+        } else {
+            $this->updateBuffer[] = $data;
+        }
         if (count($this->insertBuffer) >= $this->insertBufferSize) {
             $this->bufferIsFull = true;
             $this->flushInsertBuffer();
@@ -255,15 +264,6 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
     public function isWritable()
     {
         return !$this->closed;
-    }
-
-    private function persist(Email $email)
-    {
-        if (is_null($email->i_id)) {
-            $this->insertBuffer[] = $email;
-        } else {
-            $this->updateBuffer[] = $email;
-        }
     }
 
     /**

@@ -12,7 +12,7 @@ interface HydrationStrategyInterface
     /**
      * Creates entity object from DB row.
      *
-     * @param array $row DB row
+     * @param mixed[] $row DB row
      *
      * @return object entity object
      */
@@ -23,7 +23,7 @@ interface HydrationStrategyInterface
      *
      * @param object $entity entity object
      *
-     * @return array DB row
+     * @return mixed[] DB row
      */
     public function dehydrate(object $entity): array;
 }

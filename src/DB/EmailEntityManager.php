@@ -48,7 +48,7 @@ class EmailEntityManager implements LoggerAwareInterface
      * @param ConnectionInterface $readConnection
      * @param ConnectionInterface $writeConnection
      * @param MysqlQueryFactory   $queryFactory
-     * @param array               $settings
+     * @param mixed[]             $settings
      */
     public function __construct(
         string $tableName,
@@ -134,7 +134,10 @@ class EmailEntityManager implements LoggerAwareInterface
         return $query;
     }
 
-    private function getDbProperties()
+    /**
+     * @return ReflectionProperty[]
+     */
+    private function getDbProperties(): array
     {
         static $result = null;
         if (!is_null($result)) {
@@ -264,7 +267,12 @@ class EmailEntityManager implements LoggerAwareInterface
         return $result;
     }
 
-    private function getBindValues(QueryInterface $query)
+    /**
+     * @param QueryInterface $query
+     *
+     * @return mixed[]
+     */
+    private function getBindValues(QueryInterface $query): array
     {
         $result = [];
         foreach ($query->getBindValues() as $key => $value) {

@@ -52,6 +52,11 @@ class ResolvingThroughStream extends EventEmitter implements DuplexStreamInterfa
             ->then($end, $end);
     }
 
+    /**
+     * @param mixed $data
+     *
+     * @return bool
+     */
     protected function writeToBuffer($data): bool
     {
         if (!$data instanceof PromiseInterface) {

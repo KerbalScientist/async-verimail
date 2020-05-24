@@ -30,6 +30,8 @@ class HydratingStreamWrapper implements ReadableStreamInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param mixed ...$args
      */
     protected function filterData(...$args): ?array
     {

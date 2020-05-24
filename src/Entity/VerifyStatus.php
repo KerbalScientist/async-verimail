@@ -63,14 +63,17 @@ class VerifyStatus
         ];
     }
 
-    public static function all()
+    /**
+     * @return VerifyStatus[]
+     */
+    public static function all(): array
     {
         return array_map(function ($item) {
             return new self($item);
         }, array_keys(self::getDescriptions()));
     }
 
-    public static function __callStatic($name, $arguments)
+    public static function __callStatic(string $name, array $arguments): self
     {
         return new self(constant(self::class."::$name"));
     }

@@ -26,6 +26,8 @@ class CollectingThroughStream implements DuplexStreamInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param mixed $data
      */
     protected function writeToBuffer($data): bool
     {

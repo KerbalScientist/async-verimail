@@ -14,7 +14,14 @@ use function React\Promise\reject;
 
 trait ReadableStreamPromisorTrait
 {
+    /**
+     * @var Deferred[]
+     */
     private array $resolveQueue = [];
+
+    /**
+     * @var Deferred[]
+     */
     private array $returnQueue = [];
     private int $bufferSoftSize;
 

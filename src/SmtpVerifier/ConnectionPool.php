@@ -20,11 +20,18 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
     use LoggerAwareTrait;
 
     private ConnectorInterface $connector;
+
+    /**
+     * @var array[]
+     */
     private array $connectionPool = [];
     /**
      * @var int[]
      */
     private array $maxConnectionsPerHost;
+    /**
+     * @var bool[]
+     */
     private array $unreliableHosts;
     private ConnectionInterface $unreliableConnection;
     private float $inactiveTimeout;
@@ -35,7 +42,7 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
      *
      * @param ConnectorInterface $connector
      * @param LoopInterface      $eventLoop
-     * @param array              $settings
+     * @param mixed[]            $settings
      */
     public function __construct(ConnectorInterface $connector, LoopInterface $eventLoop, array $settings)
     {

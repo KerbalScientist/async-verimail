@@ -21,10 +21,8 @@ trait ReadableStreamIteratorTrait
 
     /**
      * {@inheritdoc}
-     *
-     * @return PromiseInterface
      */
-    public function current()
+    public function current(): PromiseInterface
     {
         if (!isset($this->current)) {
             $this->next();
@@ -36,7 +34,7 @@ trait ReadableStreamIteratorTrait
     /**
      * {@inheritdoc}
      */
-    public function next()
+    public function next(): void
     {
         $this->valid = $this->hasData();
         $this->current = $this->promise();
@@ -48,17 +46,15 @@ trait ReadableStreamIteratorTrait
     /**
      * {@inheritdoc}
      */
-    public function valid()
+    public function valid(): bool
     {
         return $this->valid;
     }
 
     /**
      * {@inheritdoc}
-     *
-     * @return int
      */
-    public function key()
+    public function key(): int
     {
         return $this->key;
     }
@@ -66,7 +62,7 @@ trait ReadableStreamIteratorTrait
     /**
      * Does nothing.
      */
-    public function rewind()
+    public function rewind(): void
     {
     }
 }

@@ -40,6 +40,9 @@ class Verifier implements LoggerAwareInterface
     private ConnectorInterface $verifierConnector;
     private int $maxConcurrent;
     private Mutex $mutex;
+    /**
+     * @var array[]
+     */
     private array $handledExceptions;
 
     /**
@@ -47,7 +50,7 @@ class Verifier implements LoggerAwareInterface
      *
      * @param ConnectorInterface $verifierConnector
      * @param Mutex              $mutex
-     * @param array              $settings
+     * @param mixed[]            $settings
      *                                              $settings['maxConcurrent'] - maximum concurrent verifications
      */
     public function __construct(ConnectorInterface $verifierConnector, Mutex $mutex, array $settings = [])
@@ -99,11 +102,11 @@ class Verifier implements LoggerAwareInterface
      * Creates stream, that verifies, sets `Email::$s_status` property and passes `Email` entities through.
      *
      * @param LoopInterface $loop
-     * @param array         $pipeOptions Options, passed to `App::pipeThrough()`
+     * @param mixed[]       $pipeOptions Options, passed to `App::pipeThrough()`
      *
      * @return DuplexStreamInterface duplex stream of Email entities at both readable and writable sides
      */
-    public function createVerifyingStream(LoopInterface $loop, $pipeOptions = []): DuplexStreamInterface
+    public function createVerifyingStream(LoopInterface $loop, array $pipeOptions = []): DuplexStreamInterface
     {
         $through = function (Email $email) {
             return $this->verify($email, function (Email $email, ?VerifyStatus $status) {
