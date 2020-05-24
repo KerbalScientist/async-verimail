@@ -43,6 +43,10 @@ function pipeThrough(
                 $item->end();
             });
         }
-        $current = $item;
+        // Condition needed to relax PHPStan level 7 suspicions about $current->pipe() call when $current === $target
+        // (see array_push() call above).
+        if ($item instanceof ReadableStreamInterface) {
+            $current = $item;
+        }
     }
 }
