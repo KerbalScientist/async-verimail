@@ -18,6 +18,7 @@ use App\Stream\ReadableStreamWrapperTrait;
 use App\Stream\ThroughStream;
 use Aura\SqlQuery\Common\SelectInterface;
 use Clue\React\Socks\Client as SocksClient;
+use Dotenv\Dotenv;
 use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
 use Exception;
@@ -101,6 +102,7 @@ class App implements EventEmitterInterface
      */
     public function run(?array $args = null): int
     {
+        Dotenv::createImmutable(dirname(__DIR__))->load();
         $this->emit('start');
         if (is_null($args)) {
             $args = $GLOBALS['argv'];
@@ -384,12 +386,7 @@ class App implements EventEmitterInterface
      */
     public function getDbConfigValue(string $name, $default = null)
     {
-        $value = getenv($name);
-        if (false === $value) {
-            return $default;
-        }
-
-        return $value;
+        return $_SERVER[$name] ?? $default;
     }
 
     public function getReadDbConnection(LoopInterface $loop): ConnectionInterface

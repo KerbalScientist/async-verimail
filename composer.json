@@ -12,7 +12,8 @@
         "clue/socks-react": "^1.0",
         "ext-pcntl": "*",
         "symfony/config": "^5.0",
-        "symfony/yaml": "^5.0"
+        "symfony/yaml": "^5.0",
+        "vlucas/phpdotenv": "^4.1"
     },
     "require-dev": {
         "symplify/easy-coding-standard": "^7.2",
@@ -35,6 +36,7 @@
         "test": [
             "@test:ecs",
             "@test:phpstan"
-        ]
+        ],
+        "pre-update-cmd": "cp -n .env.example .env"
     }
 }
