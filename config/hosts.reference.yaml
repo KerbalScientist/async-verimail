@@ -2,13 +2,13 @@
 hosts:
 
   # Prototype
-  name:
+  hostname:
 
     # Maximum number of concurrent connections.
-    maxConnections:       ~
+    maxConnections:       1
 
     # Send RSET, HELO, MAIL FROM commands after each specified count of verifications.
-    resetAfterVerifications: ~
+    resetAfterVerifications: 1
 
     # Close and reopen SMTP connection after specified count of verifications.
     closeAfterVerifications: ~
@@ -17,13 +17,13 @@ hosts:
     inactiveTimeout:      0
 
     # Non-existing user (part of email before "@") used to check if server is reliable. If server accepts non-existing email, it is unreliable.
-    randomUser:           ~
+    randomUser:           "no_such_user_iwahk1uiPoof9iCheele3eiViuCh7EipooQuoo9phai9faadoo"
 
     # Used for "MAIL FROM" SMTP command.
-    fromEmail:            ~
+    fromEmail:            "test@example.com"
 
     # Used in HELO command.
-    fromHost:             ~
+    fromHost:             "localhost"
 
     # If set, no connections to this host will be created and all emails of this host will be marked as impossible to check by SMTP only.
     unreliable:           false
