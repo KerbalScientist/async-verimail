@@ -416,14 +416,6 @@ class App implements EventEmitterInterface
     }
 
     /**
-     * @param string $maxConcurrent
-     */
-    public function setOptionMaxConcurrent(string $maxConcurrent): void
-    {
-        $this->container->setMaxConcurrent((int) $maxConcurrent);
-    }
-
-    /**
      * @param string $filename
      */
     public function setOptionConfigFile(string $filename): void

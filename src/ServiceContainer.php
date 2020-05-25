@@ -41,14 +41,6 @@ class ServiceContainer
     private LoggerInterface $logger;
     private LoopInterface $eventLoop;
     private EmailEntityManager $entityManager;
-    /**
-     * @todo Hardcoded.
-     */
-    private int $maxConcurrent = 2000;
-    /**
-     * @todo Hardcoded.
-     */
-    private float $connectTimeout = 30;
     private ?string $proxy = null;
     private string $hostsConfigFile;
     private HostsConfig $hostsConfig;
@@ -110,11 +102,11 @@ class ServiceContainer
     public function createDbConnection(): ConnectionInterface
     {
         $url = '';
-        $url .= rawurlencode(self::getDbConfigValue('DB_USER', 'root'));
-        $url .= ':'.rawurlencode(self::getDbConfigValue('DB_PASSWORD', ''));
-        $url .= '@'.self::getDbConfigValue('DB_HOST', 'localhost');
-        $url .= ':'.self::getDbConfigValue('DB_PORT', '3306');
-        $schemaName = self::getDbConfigValue('DB_SCHEMA');
+        $url .= rawurlencode(self::getEnvConfigValue('DB_USER', 'root'));
+        $url .= ':'.rawurlencode(self::getEnvConfigValue('DB_PASSWORD', ''));
+        $url .= '@'.self::getEnvConfigValue('DB_HOST', 'localhost');
+        $url .= ':'.self::getEnvConfigValue('DB_PORT', '3306');
+        $schemaName = self::getEnvConfigValue('DB_SCHEMA');
         if (!is_null($schemaName)) {
             $url .= "/$schemaName";
         }
@@ -173,7 +165,7 @@ class ServiceContainer
     {
         if (!isset($this->entityManager)) {
             $this->entityManager = new EmailEntityManager(
-                $this->getDbConfigValue('DB_EMAIL_TABLE_NAME', 'email'),
+                $this->getEnvConfigValue('DB_EMAIL_TABLE_NAME', 'email'),
                 $this->getReadDbConnection(),
                 $this->getWriteDbConnection(),
                 new MysqlQueryFactory()
@@ -213,7 +205,7 @@ class ServiceContainer
         $verifierConnector->setLogger($logger);
 
         $this->verifier = new Verifier($verifierConnector, new Mutex($loop), [
-            'maxConcurrent' => $this->maxConcurrent,
+            'maxConcurrent' => (int) $this->getEnvConfigValue('MAX_CONCURRENT', 1000),
         ]);
         $this->verifier->setLogger($this->getLogger());
 
@@ -224,7 +216,7 @@ class ServiceContainer
     {
         if (!isset($this->socketConnector)) {
             $this->socketConnector = new \React\Socket\Connector($this->getEventLoop(), [
-                'timeout' => $this->connectTimeout,
+                'timeout' => (int) $this->getEnvConfigValue('CONNECT_TIMEOUT', 30),
             ]);
             if (isset($this->proxy)) {
                 $this->socketConnector = new SocksClient($this->proxy, $this->socketConnector);
@@ -258,7 +250,7 @@ class ServiceContainer
      *
      * @return mixed
      */
-    public function getDbConfigValue(string $name, $default = null)
+    public function getEnvConfigValue(string $name, $default = null)
     {
         return $_SERVER[$name] ?? $default;
     }
@@ -304,22 +296,6 @@ class ServiceContainer
     public function setEventLoop(LoopInterface $eventLoop): void
     {
         $this->eventLoop = $eventLoop;
-    }
-
-    /**
-     * @param int $maxConcurrent
-     */
-    public function setMaxConcurrent(int $maxConcurrent): void
-    {
-        $this->maxConcurrent = $maxConcurrent;
-    }
-
-    /**
-     * @param float|int $connectTimeout
-     */
-    public function setConnectTimeout($connectTimeout): void
-    {
-        $this->connectTimeout = $connectTimeout;
     }
 
     /**
