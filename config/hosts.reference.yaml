@@ -1,0 +1,29 @@
+# Per-host configuration. Each key or "name" attribute is hostname. "default" hostname sets defaults for all hosts.
+hosts:
+
+  # Prototype
+  name:
+
+    # Maximum number of concurrent connections.
+    maxConnections:       ~
+
+    # Send RSET, HELO, MAIL FROM commands after each specified count of verifications.
+    resetAfterVerifications: ~
+
+    # Close and reopen SMTP connection after specified count of verifications.
+    closeAfterVerifications: ~
+
+    # Not implemented. Close connection after specified amout of inactivity time in seconds.
+    inactiveTimeout:      ~
+
+    # Non-existing user (part of email before "@") used to check if server is reliable. If server accepts non-existing email, it is unreliable.
+    randomUser:           ~
+
+    # Used for "MAIL FROM" SMTP command.
+    fromEmail:            ~
+
+    # Used in HELO command.
+    fromHost:             ~
+
+    # If set, no connections to this host will be created and all emails of this host will be marked as impossible to check by SMTP only.
+    unreliable:           false

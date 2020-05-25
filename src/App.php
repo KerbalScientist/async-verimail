@@ -7,6 +7,7 @@
 
 namespace App;
 
+use App\Config\HostsConfig;
 use App\DB\EmailEntityManager;
 use App\DB\MysqlQueryFactory;
 use App\Entity\Email;
@@ -19,6 +20,7 @@ use Aura\SqlQuery\Common\SelectInterface;
 use Clue\React\Socks\Client as SocksClient;
 use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
+use Exception;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -37,6 +39,8 @@ use ReactPHP\MySQL\Decorator\BindAssocParamsConnectionDecorator;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
+use Symfony\Component\Config\Definition\Dumper\YamlReferenceDumper;
+use Symfony\Component\Yaml\Yaml;
 use Throwable;
 use WyriHaximus\React\PSR3\Stdio\StdioLogger;
 use function React\Promise\all;
@@ -76,31 +80,19 @@ class App implements EventEmitterInterface
      * @var PromiseInterface[]
      */
     private array $resolveBeforeStop = [];
-    /**
-     * @var int[]
-     */
-    private array $maxConnectionsPerHost = [
-        /*
-         * @todo Hardcoded. Move to config.
-         */
-        'default' => 1,
-        'yandex.ru' => 15,
-        'narod.ru' => 10,
-        'ya.ru' => 10,
-        'gmail.com' => 3,
-        'mail.ru' => 1,
-        'list.ru' => 1,
-        'bk.ru' => 1,
-        'rambler.ru' => 1,
-        'outlook.com' => 2,
-    ];
     private int $maxConcurrent = 2000;
     /**
      * @todo Hardcoded.
      */
     private float $connectTimeout = 30;
     private ?string $proxy = null;
-    private string $fromEmail = 'info@clockshop.ru';
+    private string $hostsConfigFile;
+    private HostsConfig $hostsConfig;
+
+    public function __construct()
+    {
+        $this->hostsConfigFile = dirname(__DIR__).'/config/hosts.yaml';
+    }
 
     /**
      * @param string[]|null $args
@@ -193,6 +185,24 @@ class App implements EventEmitterInterface
         return $this->eventLoop;
     }
 
+    public function getHostsConfig(): HostsConfig
+    {
+        if (isset($this->hostsConfig)) {
+            return $this->hostsConfig;
+        }
+        $config = new HostsConfig();
+        if (!is_file($this->hostsConfigFile)) {
+            throw new Exception("Config file '$this->hostsConfigFile' not found.");
+        }
+        $contents = file_get_contents($this->hostsConfigFile);
+        if (false === $contents) {
+            throw new Exception("Cannot read config from '$this->hostsConfigFile'.");
+        }
+        $config->loadArray(Yaml::parse($contents)['hosts']);
+
+        return $this->hostsConfig = $config;
+    }
+
     private function resolveBeforeStop(PromiseInterface $promise): void
     {
         $this->resolveBeforeStop[] = $promise;
@@ -207,7 +217,7 @@ class App implements EventEmitterInterface
             $promise = all($this->resolveBeforeStop);
         }
         $stop = function () use ($loop) {
-            $loop->addTimer(3, function () use ($loop) {
+            $loop->addTimer(1, function () use ($loop) {
                 $loop->stop();
             });
         };
@@ -356,7 +366,7 @@ class App implements EventEmitterInterface
     public function getEntityManager(LoopInterface $loop, LoggerInterface $logger): EmailEntityManager
     {
         $entityManager = new EmailEntityManager(
-            $this->getConfig('DB_EMAIL_TABLE_NAME', 'email'),
+            $this->getDbConfigValue('DB_EMAIL_TABLE_NAME', 'email'),
             $this->getReadDbConnection($loop),
             $this->getWriteDbConnection($loop),
             new MysqlQueryFactory()
@@ -372,7 +382,7 @@ class App implements EventEmitterInterface
      *
      * @return mixed
      */
-    public function getConfig(string $name, $default = null)
+    public function getDbConfigValue(string $name, $default = null)
     {
         $value = getenv($name);
         if (false === $value) {
@@ -390,11 +400,11 @@ class App implements EventEmitterInterface
     public function createDbConnection(LoopInterface $loop): ConnectionInterface
     {
         $url = '';
-        $url .= rawurlencode(self::getConfig('DB_USER', 'root'));
-        $url .= ':'.rawurlencode(self::getConfig('DB_PASSWORD', ''));
-        $url .= '@'.self::getConfig('DB_HOST', 'localhost');
-        $url .= ':'.self::getConfig('DB_PORT', '3306');
-        $schemaName = self::getConfig('DB_SCHEMA');
+        $url .= rawurlencode(self::getDbConfigValue('DB_USER', 'root'));
+        $url .= ':'.rawurlencode(self::getDbConfigValue('DB_PASSWORD', ''));
+        $url .= '@'.self::getDbConfigValue('DB_HOST', 'localhost');
+        $url .= ':'.self::getDbConfigValue('DB_PORT', '3306');
+        $schemaName = self::getDbConfigValue('DB_SCHEMA');
         if (!is_null($schemaName)) {
             $url .= "/$schemaName";
         }
@@ -523,6 +533,8 @@ class App implements EventEmitterInterface
      * @param LoopInterface            $loop
      *
      * @return Verifier
+     *
+     * @throws Exception
      */
     public function getVerifier(
         ResolverInterface $resolver,
@@ -530,40 +542,17 @@ class App implements EventEmitterInterface
         LoggerInterface $logger,
         LoopInterface $loop
     ): Verifier {
-        $verifierConnector = new Connector($resolver, $connector, new Mutex($loop), [
-            /*
-             * @todo Hardcoded. Move to config.
-             */
-            'default' => [
-                'fromEmail' => $this->fromEmail,
-                'resetAfterVerifications' => 1,
-            ],
-            'yandex.ru' => [
-                'resetAfterVerifications' => 25,
-            ],
-            'google.com' => [
-                'resetAfterVerifications' => 10,
-            ],
-            'outlook.com' => [
-                'resetAfterVerifications' => 1,
-            ],
-            'hotmail.com' => [
-                'resetAfterVerifications' => 1,
-            ],
-            'sibmail.com' => [
-                'resetAfterVerifications' => 3,
-            ],
-            'icloud.com' => [
-                'closeAfterVerifications' => 10,
-            ],
-            'mail.com' => [
-                'fromHost' => 'kerbal-scientist.host',
-                'fromEmail' => 'info@kerbal-scientist.host',
-            ],
-        ]);
+        $config = $this->getHostsConfig();
+        $verifierConnector = new Connector(
+            $resolver,
+            $connector,
+            new Mutex($loop),
+            $config->getConnectionSettings()
+        );
         $verifierConnector->setLogger($logger);
         $verifierConnector = new ConnectionPool($verifierConnector, $loop, [
-            'maxConnectionsPerHost' => $this->maxConnectionsPerHost,
+            'maxConnectionsPerHost' => $config->getMaxConnectionsPerHost(),
+            'unreliableHosts' => $config->getUnreliableHosts(),
         ]);
         $verifierConnector->setLogger($logger);
 
@@ -575,6 +564,19 @@ class App implements EventEmitterInterface
     private function getSelectQuery(EmailEntityManager $entityManager): SelectInterface
     {
         return $entityManager->createSelectQuery($this->filter);
+    }
+
+    /**
+     * @return PromiseInterface
+     *
+     * @throws Exception
+     */
+    public function configDumpCommand(): PromiseInterface
+    {
+        $dumper = new YamlReferenceDumper();
+        echo $dumper->dump($this->getHostsConfig());
+
+        return resolve();
     }
 
     public function showCommand(string $minInterval = '0'): PromiseInterface
@@ -646,19 +648,11 @@ class App implements EventEmitterInterface
     }
 
     /**
-     * @param string $emailFrom
+     * @param string $filename
      */
-    public function setOptionEmailFrom(string $emailFrom): void
+    public function setOptionConfigFile(string $filename): void
     {
-        $this->fromEmail = $emailFrom;
-    }
-
-    /**
-     * @param string $maxConnectionsPerHost
-     */
-    public function setOptionMaxConnectionsPerHost(string $maxConnectionsPerHost): void
-    {
-        $this->maxConnectionsPerHost = json_decode($maxConnectionsPerHost, true) ?? ['default' => 1];
+        $this->hostsConfigFile = $filename;
     }
 
     /**

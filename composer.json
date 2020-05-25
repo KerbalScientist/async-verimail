@@ -10,7 +10,9 @@
         "tonix-tuft/reactphp-mysql-decorator": "^1.2",
         "ext-json": "*",
         "clue/socks-react": "^1.0",
-        "ext-pcntl": "*"
+        "ext-pcntl": "*",
+        "symfony/config": "^5.0",
+        "symfony/yaml": "^5.0"
     },
     "require-dev": {
         "symplify/easy-coding-standard": "^7.2",

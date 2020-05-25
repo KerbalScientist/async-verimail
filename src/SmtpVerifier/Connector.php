@@ -67,6 +67,7 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
     public function connect(string $hostname): PromiseInterface
     {
         $hostname = mb_strtolower($hostname);
+
         return $this->resolveMxRecords($hostname)
             ->then(function ($records) use ($hostname) {
                 /**

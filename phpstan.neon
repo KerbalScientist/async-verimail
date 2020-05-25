@@ -11,6 +11,8 @@ parameters:
     ignoreErrors:
         # \ReflectionProperty::getType() returns ReflectionNamedType, not ReflectionType.
         - "#Call to an undefined method ReflectionType::getName\\(\\)#"
+        # Always polymorphic call when called on root node.
+        - "#Call to an undefined method Symfony\\\\Component\\\\Config\\\\Definition\\\\Builder\\\\NodeDefinition::requiresAtLeastOneElement\\(\\)#"
         # PHPStan bug. PHPStan implies object property is unchanged after method call.
         -
             message: "#Negated boolean expression is always#"

@@ -1,0 +1,40 @@
+hosts:
+  default:
+    maxConnections: 1
+    resetAfterVerifications: 1
+    fromEmail: "info@clockshop.ru"
+    fromHost: "clockshop.ru"
+  "yandex.ru":
+    maxConnections: 15
+    resetAfterVerifications: 25
+  "narod.ru":
+    maxConnections: 10
+    resetAfterVerifications: 25
+  "ya.ru":
+    maxConnections: 10
+    resetAfterVerifications: 25
+  "gmail.com":
+    maxConnections: 3
+    resetAfterVerifications: 10
+  "mail.ru":
+    unreliable: true
+  "inbox.ru":
+    unreliable: true
+  "list.ru":
+    unreliable: true
+  "bk.ru":
+    unreliable: true
+  "outlook.com":
+    maxConnections: 2
+    resetAfterVerifications: 1
+  "hotmail.com":
+    resetAfterVerifications: 1
+  "sibmail.com":
+    resetAfterVerifications: 1
+  "icloud.com":
+    resetAfterVerifications: 10
+#  "mail.com": # Need some real host with MX DNS record, which can be checked
+               # by reverse DNS query and resolve to IP from which SMTP connections is made.
+#    fromEmail: "info@<some real host under control>"
+#    fromHost: "<some real host under control>"
+
