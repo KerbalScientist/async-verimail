@@ -7,60 +7,31 @@
 
 namespace App;
 
-use App\Config\HostsConfig;
-use App\DB\EmailEntityManager;
-use App\DB\MysqlQueryFactory;
 use App\Entity\Email;
-use App\Entity\VerifyStatus;
-use App\SmtpVerifier\ConnectionPool;
-use App\SmtpVerifier\Connector;
 use App\Stream\ReadableStreamWrapperTrait;
-use App\Stream\ThroughStream;
-use Aura\SqlQuery\Common\SelectInterface;
-use Clue\React\Socks\Client as SocksClient;
 use Dotenv\Dotenv;
 use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
 use Exception;
 use InvalidArgumentException;
-use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
-use Psr\Log\NullLogger;
-use React\Dns\Config\Config as DnsConfig;
-use React\Dns\Resolver\ResolverInterface;
 use React\EventLoop\LoopInterface;
-use React\MySQL\ConnectionInterface;
-use React\MySQL\Factory;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
-use React\Socket\ConnectorInterface as SocketConnectorInterface;
 use React\Stream\ReadableStreamInterface;
-use React\Stream\WritableResourceStream;
-use ReactPHP\MySQL\Decorator\BindAssocParamsConnectionDecorator;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
 use Symfony\Component\Config\Definition\Dumper\YamlReferenceDumper;
-use Symfony\Component\Yaml\Yaml;
 use Throwable;
-use WyriHaximus\React\PSR3\Stdio\StdioLogger;
 use function React\Promise\all;
 use function React\Promise\resolve;
-use const STDERR;
 
-/**
- * Class App.
- *
- * @todo God object. Commands container + service container + arguments parser.
- */
 class App implements EventEmitterInterface
 {
     use EventEmitterTrait;
 
     const EXIT_CODE_OK = 0;
     const EXIT_CODE_ERROR = 1;
-
-    const DEFAULT_NAMESERVER = '8.8.8.8';
 
     private const OPTION_PREFIX = '--';
     private const OPTION_VALUE_DELIMITER = '=';
@@ -69,30 +40,15 @@ class App implements EventEmitterInterface
 
     private bool $verbose = false;
     private bool $quiet = false;
-    private LoggerInterface $logger;
-    /**
-     * @var mixed[]
-     */
-    private array $filter = [
-        's_status' => VerifyStatus::UNKNOWN,
-    ];
-    private LoopInterface $eventLoop;
     /**
      * @var PromiseInterface[]
      */
     private array $resolveBeforeStop = [];
-    private int $maxConcurrent = 2000;
-    /**
-     * @todo Hardcoded.
-     */
-    private float $connectTimeout = 30;
-    private ?string $proxy = null;
-    private string $hostsConfigFile;
-    private HostsConfig $hostsConfig;
+    private ServiceContainer $container;
 
     public function __construct()
     {
-        $this->hostsConfigFile = dirname(__DIR__).'/config/hosts.yaml';
+        $this->container = new ServiceContainer($this);
     }
 
     /**
@@ -107,9 +63,6 @@ class App implements EventEmitterInterface
         if (is_null($args)) {
             $args = $GLOBALS['argv'];
         }
-        /*
-         * @todo Move to config.
-         */
         if (extension_loaded('xdebug')) {
             ini_set('xdebug.max_nesting_level', '100000');
         }
@@ -118,12 +71,11 @@ class App implements EventEmitterInterface
             $args = $this->processArgs($args);
             array_shift($args);
             $command = array_shift($args) ?? '';
-            $loop = $this->getEventLoop();
-            $this->getEventLoop()
-                ->addSignal(SIGINT, function () use ($loop) {
-                    echo 'Stopped by user.'.PHP_EOL;
-                    $this->stop($loop);
-                });
+            $loop = $this->container->getEventLoop();
+            $loop->addSignal(SIGINT, function () use ($loop) {
+                echo 'Stopped by user.'.PHP_EOL;
+                $this->stop($loop);
+            });
 
             return $this->runCommand($command, $args);
         } catch (Throwable $e) {
@@ -178,33 +130,6 @@ class App implements EventEmitterInterface
         return $result;
     }
 
-    public function getEventLoop(): LoopInterface
-    {
-        if (empty($this->eventLoop)) {
-            $this->eventLoop = \React\EventLoop\Factory::create();
-        }
-
-        return $this->eventLoop;
-    }
-
-    public function getHostsConfig(): HostsConfig
-    {
-        if (isset($this->hostsConfig)) {
-            return $this->hostsConfig;
-        }
-        $config = new HostsConfig();
-        if (!is_file($this->hostsConfigFile)) {
-            throw new Exception("Config file '$this->hostsConfigFile' not found.");
-        }
-        $contents = file_get_contents($this->hostsConfigFile);
-        if (false === $contents) {
-            throw new Exception("Cannot read config from '$this->hostsConfigFile'.");
-        }
-        $config->loadArray(Yaml::parse($contents)['hosts']);
-
-        return $this->hostsConfig = $config;
-    }
-
     private function resolveBeforeStop(PromiseInterface $promise): void
     {
         $this->resolveBeforeStop[] = $promise;
@@ -236,6 +161,7 @@ class App implements EventEmitterInterface
      */
     private function runCommand(string $name, array $args): int
     {
+        $this->emit('beforeRunCommand');
         $startTime = microtime(true);
         $method = $this->kebabToCamelCase($name).self::COMMAND_METHOD_SUFFIX;
         if (!is_callable([$this, $method])) {
@@ -246,17 +172,20 @@ class App implements EventEmitterInterface
         }
         $promise = $this->$method(...$args);
         $writeInfo = function () use ($startTime) {
-            $this->logger->info('Time: '.(microtime(true) - $startTime));
-            $this->logger->debug('Memory peak: '.memory_get_peak_usage(true));
+            $this->container->getLogger()
+                ->info('Time: '.(microtime(true) - $startTime));
+            $this->container->getLogger()
+                ->debug('Memory peak: '.memory_get_peak_usage(true));
         };
         $exitCode = self::EXIT_CODE_OK;
-        $loop = $this->getEventLoop();
+        $loop = $this->container->getEventLoop();
         $promise->then(function ($result) use ($loop, $writeInfo, &$exitCode) {
             $writeInfo();
             $exitCode = (int) $result;
             $this->stop($loop);
         }, function ($error) use ($loop, $writeInfo, &$exitCode) {
-            $this->logger->error("$error");
+            $this->container->getLogger()
+                ->error("$error");
             $writeInfo();
             $exitCode = self::EXIT_CODE_ERROR;
             $this->stop($loop);
@@ -315,157 +244,44 @@ class App implements EventEmitterInterface
 
     public function installCommand(): PromiseInterface
     {
-        $loop = $this->getEventLoop();
-        $logger = $this->getLogger($loop);
-        $entityManager = $this->getEntityManager($loop, $logger);
-
-        return $entityManager->installSchema();
-    }
-
-    /**
-     * @param LoopInterface $loop
-     *
-     * @return LoggerInterface
-     */
-    public function getLogger(LoopInterface $loop): LoggerInterface
-    {
-        if ($this->quiet) {
-            return new NullLogger();
-        }
-        if (!isset($this->logger)) {
-            $dumping = new ThroughStream(function ($data) {
-                return $data;
-            });
-            $loggerStream = new WritableResourceStream(STDERR, $loop);
-            $dumping->pipe($loggerStream);
-            $loggerStream = $dumping;
-            $this->on('afterStop', function () use ($loggerStream) {
-                $loggerStream->end();
-            });
-            /*
-             * @todo Using internal StdioLogger constructor to write to STDERR. Replace by own logger.
-             */
-            $this->logger = (new LevelFilteringLogger(
-                (new StdioLogger($loggerStream))
-                    ->withNewLine(true)
-            ));
-            if (!$this->verbose) {
-                $this->logger = $this->logger->withHideLevels([
-                    LogLevel::DEBUG,
-                ]);
-            }
-        }
-
-        return $this->logger;
-    }
-
-    /**
-     * @param LoopInterface   $loop
-     * @param LoggerInterface $logger
-     *
-     * @return EmailEntityManager
-     */
-    public function getEntityManager(LoopInterface $loop, LoggerInterface $logger): EmailEntityManager
-    {
-        $entityManager = new EmailEntityManager(
-            $this->getDbConfigValue('DB_EMAIL_TABLE_NAME', 'email'),
-            $this->getReadDbConnection($loop),
-            $this->getWriteDbConnection($loop),
-            new MysqlQueryFactory()
-        );
-        $entityManager->setLogger($logger);
-
-        return $entityManager;
-    }
-
-    /**
-     * @param string $name
-     * @param mixed  $default
-     *
-     * @return mixed
-     */
-    public function getDbConfigValue(string $name, $default = null)
-    {
-        return $_SERVER[$name] ?? $default;
-    }
-
-    public function getReadDbConnection(LoopInterface $loop): ConnectionInterface
-    {
-        return $this->createDbConnection($loop);
-    }
-
-    public function createDbConnection(LoopInterface $loop): ConnectionInterface
-    {
-        $url = '';
-        $url .= rawurlencode(self::getDbConfigValue('DB_USER', 'root'));
-        $url .= ':'.rawurlencode(self::getDbConfigValue('DB_PASSWORD', ''));
-        $url .= '@'.self::getDbConfigValue('DB_HOST', 'localhost');
-        $url .= ':'.self::getDbConfigValue('DB_PORT', '3306');
-        $schemaName = self::getDbConfigValue('DB_SCHEMA');
-        if (!is_null($schemaName)) {
-            $url .= "/$schemaName";
-        }
-        $url .= '?idle=-1&timeout=-1';
-
-        return new BindAssocParamsConnectionDecorator(
-            (new Factory($loop))->createLazyConnection($url)
-        );
-    }
-
-    public function getWriteDbConnection(LoopInterface $loop): ConnectionInterface
-    {
-        return self::createDbConnection($loop);
+        return $this->container
+            ->getEntityManager()
+            ->installSchema();
     }
 
     public function importCommand(string $filename): PromiseInterface
     {
-        $loop = $this->getEventLoop();
-        $logger = $this->getLogger($loop);
-        $entityManager = $this->getEntityManager($loop, $logger);
-
-        return $entityManager->importFromCsvBlocking($filename);
+        return $this->container
+            ->getEntityManager()
+            ->importFromCsvBlocking($filename);
     }
 
     public function exportCommand(string $filename): PromiseInterface
     {
-        $loop = $this->getEventLoop();
-        $logger = $this->getLogger($loop);
-        $entityManager = $this->getEntityManager($loop, $logger);
-
-        return $entityManager->exportToCsvBlocking($filename);
+        return $this->container
+            ->getEntityManager()
+            ->exportToCsvBlocking($filename);
     }
 
     /**
      * @return PromiseInterface
      *
+     * @throws Exception
+     *
      * @todo Too large. Refactor.
      */
     public function verifyCommand(): PromiseInterface
     {
-        $loop = $this->getEventLoop();
-        $logger = $this->getLogger($loop);
-        $entityManager = $this->getEntityManager($loop, $logger);
-        $config = DnsConfig::loadSystemConfigBlocking();
-        $resolver = (new \React\Dns\Resolver\Factory())->createCached(
-            $config->nameservers ? reset($config->nameservers) : self::DEFAULT_NAMESERVER,
-            $loop
-        );
-        $connector = new \React\Socket\Connector($loop, [
-            'timeout' => $this->connectTimeout,
-        ]);
-
-        if (isset($this->proxy)) {
-            $connector = new SocksClient($this->proxy, $connector);
-        }
-        $verifier = $this->getVerifier($resolver, $connector, $logger, $loop);
-        $verifier->setLogger($logger);
+        $loop = $this->container->getEventLoop();
+        $entityManager = $this->container->getEntityManager();
+        $verifier = $this->container->getVerifier();
 
         $pipeOptions = [
             'error' => true,
             'closeToEnd' => true,
             'end' => false,
         ];
-        $queryStream = $entityManager->streamByQuery($this->getSelectQuery($entityManager));
+        $queryStream = $entityManager->streamByQuery($this->container->getSelectQuery());
 
         pipeThrough(
             $queryStream,
@@ -499,7 +315,7 @@ class App implements EventEmitterInterface
             $timeLast = $timeStart = microtime(true);
         });
         $verifyingStream->on('data',
-            function () use (&$count, $logger, &$timeStart, &$timeLast, $movingAvg) {
+            function () use (&$count, &$timeStart, &$timeLast, $movingAvg) {
                 ++$count;
                 $time = microtime(true);
                 if (is_null($timeStart)) {
@@ -512,55 +328,18 @@ class App implements EventEmitterInterface
                 $movingAvg->insertValue($time, $time - $timeLast);
                 $timeLast = $time;
 
-                $logger->debug("$count emails verified.");
-                $logger->debug("Average speed: $avgSpeed emails per second.");
+                $this->container->getLogger()
+                    ->debug("$count emails verified.");
+                $this->container->getLogger()
+                    ->debug("Average speed: $avgSpeed emails per second.");
                 if (0 !== $movingAvg->get()) {
                     $movingAvgSpeed = 1 / $movingAvg->get();
-                    $logger->debug("Current speed: $movingAvgSpeed emails per second.");
+                    $this->container->getLogger()
+                        ->debug("Current speed: $movingAvgSpeed emails per second.");
                 }
             });
 
         return $deferred->promise();
-    }
-
-    /**
-     * @param ResolverInterface        $resolver
-     * @param SocketConnectorInterface $connector
-     * @param LoggerInterface          $logger
-     * @param LoopInterface            $loop
-     *
-     * @return Verifier
-     *
-     * @throws Exception
-     */
-    public function getVerifier(
-        ResolverInterface $resolver,
-        SocketConnectorInterface $connector,
-        LoggerInterface $logger,
-        LoopInterface $loop
-    ): Verifier {
-        $config = $this->getHostsConfig();
-        $verifierConnector = new Connector(
-            $resolver,
-            $connector,
-            new Mutex($loop),
-            $config->getConnectionSettings()
-        );
-        $verifierConnector->setLogger($logger);
-        $verifierConnector = new ConnectionPool($verifierConnector, $loop, [
-            'maxConnectionsPerHost' => $config->getMaxConnectionsPerHost(),
-            'unreliableHosts' => $config->getUnreliableHosts(),
-        ]);
-        $verifierConnector->setLogger($logger);
-
-        return new Verifier($verifierConnector, new Mutex($loop), [
-            'maxConcurrent' => $this->maxConcurrent,
-        ]);
-    }
-
-    private function getSelectQuery(EmailEntityManager $entityManager): SelectInterface
-    {
-        return $entityManager->createSelectQuery($this->filter);
     }
 
     /**
@@ -571,7 +350,7 @@ class App implements EventEmitterInterface
     public function configDumpCommand(): PromiseInterface
     {
         $dumper = new YamlReferenceDumper();
-        echo $dumper->dump($this->getHostsConfig());
+        echo $dumper->dump($this->container->getHostsConfig());
 
         return resolve();
     }
@@ -579,11 +358,10 @@ class App implements EventEmitterInterface
     public function showCommand(string $minInterval = '0'): PromiseInterface
     {
         $minInterval = (float) $minInterval;
-        $loop = $this->getEventLoop();
-        $logger = $this->getLogger($loop);
-        $entityManager = $this->getEntityManager($loop, $logger);
+        $loop = $this->container->getEventLoop();
+        $entityManager = $this->container->getEntityManager();
         $throttling = new Throttling\Factory($loop);
-        $stream = $entityManager->streamByQuery($this->getSelectQuery($entityManager));
+        $stream = $entityManager->streamByQuery($this->container->getSelectQuery());
         $stream = $throttling->readableStream($stream, $minInterval);
         $stream = new class($stream) implements ReadableStreamInterface {
             use ReadableStreamWrapperTrait;
@@ -618,9 +396,8 @@ class App implements EventEmitterInterface
 
     public function generateFixturesCommand(string $count = '1000'): PromiseInterface
     {
-        $loop = $this->getEventLoop();
-        $logger = $this->getLogger($loop);
-        $entityManager = $this->getEntityManager($loop, $logger);
+        $loop = $this->container->getEventLoop();
+        $entityManager = $this->container->getEntityManager();
         $fixtures = new EmailFixtures($entityManager, $loop);
 
         return $fixtures->generate((int) $count);
@@ -629,11 +406,13 @@ class App implements EventEmitterInterface
     public function setOptionVerbose(bool $verbose): void
     {
         $this->verbose = $verbose;
+        $this->container->setVerbose($verbose);
     }
 
     public function setOptionQuiet(bool $quiet): void
     {
         $this->quiet = $quiet;
+        $this->container->setQuiet($quiet);
     }
 
     /**
@@ -641,7 +420,7 @@ class App implements EventEmitterInterface
      */
     public function setOptionMaxConcurrent(string $maxConcurrent): void
     {
-        $this->maxConcurrent = (int) $maxConcurrent;
+        $this->container->setMaxConcurrent((int) $maxConcurrent);
     }
 
     /**
@@ -649,7 +428,7 @@ class App implements EventEmitterInterface
      */
     public function setOptionConfigFile(string $filename): void
     {
-        $this->hostsConfigFile = $filename;
+        $this->container->setHostsConfigFile($filename);
     }
 
     /**
@@ -657,7 +436,7 @@ class App implements EventEmitterInterface
      */
     public function setOptionFilter(string $filter): void
     {
-        $this->filter = json_decode($filter, true) ?? [];
+        $this->container->setFilter(json_decode($filter, true) ?? []);
     }
 
     /**
@@ -665,6 +444,6 @@ class App implements EventEmitterInterface
      */
     public function setOptionProxy(string $proxy): void
     {
-        $this->proxy = $proxy;
+        $this->container->setProxy($proxy);
     }
 }
