@@ -83,7 +83,7 @@ class App implements EventEmitterInterface
         /*
          * @todo Hardcoded. Move to config.
          */
-        '*' => 1,
+        'default' => 1,
         'yandex.ru' => 15,
         'narod.ru' => 10,
         'ya.ru' => 10,
@@ -534,7 +534,7 @@ class App implements EventEmitterInterface
             /*
              * @todo Hardcoded. Move to config.
              */
-            '*' => [
+            'default' => [
                 'fromEmail' => $this->fromEmail,
                 'resetAfterVerifications' => 1,
             ],
@@ -658,7 +658,7 @@ class App implements EventEmitterInterface
      */
     public function setOptionMaxConnectionsPerHost(string $maxConnectionsPerHost): void
     {
-        $this->maxConnectionsPerHost = json_decode($maxConnectionsPerHost, true) ?? ['*' => 1];
+        $this->maxConnectionsPerHost = json_decode($maxConnectionsPerHost, true) ?? ['default' => 1];
     }
 
     /**

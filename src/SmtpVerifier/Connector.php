@@ -111,7 +111,7 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
                 $socketConnection = $result;
                 $this->logger->debug("$hostname MX - connected to host".
                     " {$socketConnection->getRemoteAddress()} from {$socketConnection->getLocalAddress()}.");
-                $settings = $this->connectionSettings['*'] ?? [];
+                $settings = $this->connectionSettings['default'] ?? [];
                 if (isset($this->connectionSettings[$hostname])) {
                     $settings = $this->connectionSettings[$hostname] + $settings;
                 }

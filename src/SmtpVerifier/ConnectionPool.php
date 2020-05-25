@@ -53,7 +53,7 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
             $this->maxConnectionsPerHost = $settings['maxConnectionsPerHost'];
         } else {
             $this->maxConnectionsPerHost = [
-                '*' => intval($settings['maxConnectionsPerHost']),
+                'default' => intval($settings['maxConnectionsPerHost']),
             ];
         }
         $this->logger = new NullLogger();
@@ -83,7 +83,7 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
 
     private function getMaxConnections(string $hostname): int
     {
-        return $this->maxConnectionsPerHost[$hostname] ?? $this->maxConnectionsPerHost['*'] ?? 1;
+        return $this->maxConnectionsPerHost[$hostname] ?? $this->maxConnectionsPerHost['default'] ?? 1;
     }
 
     private function getConnection(string $hostname): PromiseInterface
