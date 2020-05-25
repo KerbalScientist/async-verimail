@@ -67,6 +67,7 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
      */
     public function connect(string $hostname): PromiseInterface
     {
+        $hostname = mb_strtolower($hostname);
         if (empty($this->connectionPool[$hostname])
             || count($this->connectionPool[$hostname]) < $this->getMaxConnections($hostname)) {
             $this->logger->debug("Connection - create for $hostname.");
