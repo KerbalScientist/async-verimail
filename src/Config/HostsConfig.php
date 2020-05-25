@@ -44,7 +44,7 @@ class HostsConfig implements ConfigurationInterface
                         ->info('Close and reopen SMTP connection after specified count of verifications.')
                         ->treatNullLike(0)->end()
                     ->integerNode('inactiveTimeout')
-                        ->info('Not implemented. Close connection after specified amout of inactivity time in seconds.')
+                        ->info('Not implemented. Close connection after specified amount of inactivity time in seconds.')
                         ->treatNullLike(0)->end()
                     ->scalarNode('randomUser')
                         ->info('Non-existing user (part of email before "@") used to check if server is reliable.'.

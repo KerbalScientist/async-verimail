@@ -13,8 +13,8 @@ hosts:
     # Close and reopen SMTP connection after specified count of verifications.
     closeAfterVerifications: ~
 
-    # Not implemented. Close connection after specified amout of inactivity time in seconds.
-    inactiveTimeout:      ~
+    # Not implemented. Close connection after specified amount of inactivity time in seconds.
+    inactiveTimeout:      0
 
     # Non-existing user (part of email before "@") used to check if server is reliable. If server accepts non-existing email, it is unreliable.
     randomUser:           ~
