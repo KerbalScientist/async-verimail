@@ -117,7 +117,9 @@ class VerifyCommand extends BaseCommand
             $timeLast = $timeStart = microtime(true);
         });
         $progress = new ProgressBar($output->section(), $totalCount);
-        $progress->setProgressCharacter("\033[32m➤ \033[0m");
+        $progress->setBarCharacter('◼');
+        $progress->setProgressCharacter("\033[32m◼\033[0m");
+        $progress->setEmptyBarCharacter(' ');
         $section = $output->section();
         $verifyingStream->on('resolve',
             function () use (&$count, $timeStart, &$timeLast, $movingAvg, $section, $progress) {
