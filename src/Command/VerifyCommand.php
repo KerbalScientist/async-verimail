@@ -9,8 +9,11 @@ namespace App\Command;
 
 use App\MovingAverage;
 use React\Promise\Deferred;
+use React\Stream\DuplexStreamInterface;
+use React\Stream\ReadableStreamInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use function App\pipeThrough;
 
@@ -25,7 +28,7 @@ class VerifyCommand extends BaseCommand
             ->setDescription('Verify emails from DB.')
             ->addUsage('--filter=\'{"m_mail":["NOT LIKE","%@mail.ru"],'.
                 '"s_status":  "unknown","dt_updated":["<", "2020-05-20 00:00"], "#limit": 100}\' --proxy="127.0.0.1:10000"')
-            ->addOption('proxy', 'x' ,InputArgument::OPTIONAL,
+            ->addOption('proxy', 'x', InputArgument::OPTIONAL,
                 'SOCKS5 proxy IP:PORT.');
     }
 
@@ -73,9 +76,27 @@ class VerifyCommand extends BaseCommand
             $queryStream->close();
         });
 
+        if ($output instanceof ConsoleOutputInterface) {
+            $this->showStats($output, $queryStream, $verifyingStream);
+        }
+        $this->setExecutePromise($deferred->promise());
+
+        return 0;
+    }
+
+    /**
+     * @param ConsoleOutputInterface  $output
+     * @param ReadableStreamInterface $queryStream
+     * @param DuplexStreamInterface   $verifyingStream
+     */
+    private function showStats(
+        ConsoleOutputInterface $output,
+        ReadableStreamInterface $queryStream,
+        DuplexStreamInterface $verifyingStream
+    ): void {
         $count = 0;
-        $timeStart = null;
-        $timeLast = null;
+        $timeStart = microtime(true);
+        $timeLast = microtime(true);
         /**
          * @todo Hardcoded windowWidth.
          */
@@ -83,32 +104,22 @@ class VerifyCommand extends BaseCommand
         $queryStream->once('data', function () use (&$timeStart, &$timeLast) {
             $timeLast = $timeStart = microtime(true);
         });
-        $verifyingStream->on('data',
-            function () use (&$count, &$timeStart, &$timeLast, $movingAvg) {
+        $section = $output->section();
+        $verifyingStream->on('resolve',
+            function () use (&$count, &$timeStart, &$timeLast, $movingAvg, $section) {
                 ++$count;
                 $time = microtime(true);
-                if (is_null($timeStart)) {
-                    /**
-                     * @todo Hardcoded  - 0.1.
-                     */
-                    $timeLast = $timeStart = $time - 0.1;
-                }
                 $avgSpeed = $count / ($time - $timeStart);
                 $movingAvg->insertValue($time, $time - $timeLast);
                 $timeLast = $time;
 
-                $this->container->getLogger()
-                    ->debug("$count emails verified.");
-                $this->container->getLogger()
-                    ->debug("Average speed: $avgSpeed emails per second.");
+                $section->clear();
+                $section->writeln("$count emails verified.");
+                $section->writeln("Average speed: $avgSpeed emails per second.");
                 if (0 !== $movingAvg->get()) {
                     $movingAvgSpeed = 1 / $movingAvg->get();
-                    $this->container->getLogger()
-                        ->debug("Current speed: $movingAvgSpeed emails per second.");
+                    $section->writeln("Current speed: $movingAvgSpeed emails per second.");
                 }
             });
-        $this->setExecutePromise($deferred->promise());
-
-        return 0;
     }
 }

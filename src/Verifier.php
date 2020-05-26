@@ -29,6 +29,7 @@ use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
 use React\Stream\CompositeStream;
 use React\Stream\DuplexStreamInterface;
+use React\Stream\Util;
 use Throwable;
 use function React\Promise\all;
 use function React\Promise\resolve;
@@ -117,17 +118,6 @@ class Verifier implements LoggerAwareInterface
                 return resolve($email);
             });
         };
-        /*
-         * @todo Remove debug $through.
-         */
-//        $through = function (Email $email) {
-//            global $app;
-//            $deferred = new Deferred();
-//            $app->getEventLoop()->addTimer(rand(100, 1500) / 100, function () use ($email, $deferred) {
-//                $deferred->resolve($email);
-//            });
-//            return $deferred->promise();
-//        };
         pipeThrough(
             $collectingStream = new CollectingThroughStream($loop),
             [
@@ -138,6 +128,7 @@ class Verifier implements LoggerAwareInterface
         );
         $result = new CompositeStream($resolvingStream, $collectingStream);
         $collectingStream->removeListener('close', [$result, 'close']);
+        Util::forwardEvents($resolvingStream, $result, ['resolve']);
 
         return $result;
     }

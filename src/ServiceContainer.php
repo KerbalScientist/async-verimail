@@ -159,9 +159,14 @@ class ServiceContainer
                 (new StdioLogger($loggerStream))
                     ->withNewLine(true)
             ));
-            if (!$this->verbose) {
+            if (!$this->debug) {
                 $this->logger = $this->logger->withHideLevels([
                     LogLevel::DEBUG,
+                ]);
+            }
+            if (!$this->verbose) {
+                $this->logger = $this->logger->withHideLevels([
+                    LogLevel::INFO,
                 ]);
             }
         }

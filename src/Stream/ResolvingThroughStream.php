@@ -72,6 +72,7 @@ class ResolvingThroughStream extends EventEmitter implements DuplexStreamInterfa
         $data->then(function ($result) use ($key) {
             unset($this->promiseBuffer[$key]);
             $this->buffer[] = $result;
+            $this->emit('resolve', [$result]);
             $this->flush();
         }, function ($error) use ($key) {
             unset($this->promiseBuffer[$key]);
@@ -81,25 +82,6 @@ class ResolvingThroughStream extends EventEmitter implements DuplexStreamInterfa
 
         return (count($this->promiseBuffer) + count($this->buffer)) < $this->softBufferSize;
     }
-
-//    public function close()
-//    {
-//        echo (new Exception())->__toString();
-//        if ($this->closed) {
-//            return;
-//        }
-//        $this->flush(true);
-//
-//        $this->readable = false;
-//        $this->writable = false;
-//        $this->closed = true;
-//        $this->paused = true;
-//        $this->drain = false;
-//        $this->buffer = [];
-//
-//        $this->emit('close');
-//        $this->removeAllListeners();
-//    }
 
     public function close()
     {
