@@ -14,6 +14,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -52,6 +53,7 @@ abstract class BaseCommand extends Command
 
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
+        $this->container->setLogger(new ConsoleLogger($output));
         $this->setContainerOptions($input);
         $verbosity = $output->getVerbosity();
         if (OutputInterface::VERBOSITY_DEBUG === $verbosity) {
