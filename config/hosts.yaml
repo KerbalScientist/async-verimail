@@ -5,7 +5,7 @@ hosts:
     fromEmail: "info@clockshop.ru"
     fromHost: "clockshop.ru"
   "yandex.ru":
-    maxConnections: 15
+    maxConnections: 25
     resetAfterVerifications: 25
   "narod.ru":
     maxConnections: 10
@@ -14,7 +14,7 @@ hosts:
     maxConnections: 10
     resetAfterVerifications: 25
   "gmail.com":
-    maxConnections: 3
+    maxConnections: 10
     resetAfterVerifications: 10
   "mail.ru":
     unreliable: true
