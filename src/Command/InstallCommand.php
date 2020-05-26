@@ -20,6 +20,9 @@ class InstallCommand extends BaseCommand
             $this->container
                 ->getEntityManager()
                 ->installSchema()
+                ->then(function () use ($output) {
+                    $output->writeln('DB schema installed successfully.');
+                })
         );
 
         return 0;

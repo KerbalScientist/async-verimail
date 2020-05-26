@@ -48,21 +48,22 @@ class ShowCommand extends BaseCommand
             {
                 return [
                     "$email->i_id $email->m_mail $email->s_status ({$email->s_status->getDescription()})".
-                    " {$email->dt_updated->format(DATE_ATOM)}".PHP_EOL,
+                    " {$email->dt_updated->format(DATE_ATOM)}",
                 ];
             }
         };
         $deferred = new Deferred();
         $total = 0;
-        $stream->on('data', function ($data) use (&$total) {
+        $stream->on('data', function ($data) use (&$total, $output) {
             ++$total;
-            echo $data;
+            $output->writeln($data);
         });
         $stream->on('error', function ($e) use ($deferred) {
             $deferred->reject($e);
         });
-        $stream->on('end', function () use ($deferred, &$total) {
-            echo PHP_EOL."Total: $total".PHP_EOL;
+        $stream->on('end', function () use ($deferred, &$total, $output) {
+            $output->writeln('');
+            $output->writeln("Total: $total");
             $deferred->resolve();
         });
 

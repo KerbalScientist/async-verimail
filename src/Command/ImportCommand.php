@@ -30,6 +30,9 @@ class ImportCommand extends BaseCommand
             $this->container
                 ->getEntityManager()
                 ->importFromCsvBlocking($filename)
+                ->then(function () use ($output) {
+                    $output->writeln('Import complete.');
+                })
         );
 
         return 0;

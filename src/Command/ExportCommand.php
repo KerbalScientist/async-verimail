@@ -38,6 +38,9 @@ class ExportCommand extends BaseCommand
             $this->container
                 ->getEntityManager()
                 ->exportToCsvBlocking($filename, $query)
+                ->then(function () use ($output) {
+                    $output->writeln('Export complete.');
+                })
         );
 
         return 0;

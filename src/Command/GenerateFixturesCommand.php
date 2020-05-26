@@ -24,10 +24,14 @@ class GenerateFixturesCommand extends BaseCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $count = (int) $input->getArgument('count');
         $this->setExecutePromise(
             $this->container
                 ->getEmailFixtures()
-                ->generate((int) $input->getArgument('count'))
+                ->generate($count)
+                ->then(function () use ($output, $count) {
+                    $output->writeln("Generated $count fixtures.");
+                })
         );
 
         return 0;
