@@ -17,6 +17,7 @@ use InvalidArgumentException;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\NullLogger;
 use React\MySQL\ConnectionInterface;
+use React\MySQL\QueryResult;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
 use React\Stream\ReadableStreamInterface;
@@ -245,6 +246,29 @@ class EmailEntityManager implements LoggerAwareInterface
         $query->bindValue('statusList', array_map('strval', $statusList));
 
         return $this->streamByQuery($query);
+    }
+
+    /**
+     * Returns promise, which will be fulfilled by query rows count.
+     *
+     * Rows will be counted with respect of LIMIT and OFFSET, so for query
+     *  with LIMIT 100 it will always return 100 if total count of matching rows is more than 100.
+     *
+     * @param SelectInterface $query
+     *
+     * @return PromiseInterface PromiseInterface<int, Exception>
+     */
+    public function countByQuery(SelectInterface $query): PromiseInterface
+    {
+        $sql = "SELECT count(*) FROM ({$query->getStatement()}) t";
+        $bind = $this->getBindValues($query);
+        $this->logger->debugQuery($sql, $bind);
+
+        return $this->readConnection
+            ->query($sql, $bind)
+            ->then(function (QueryResult $result) {
+                return (int) reset($result->resultRows[0]);
+            });
     }
 
     /**
