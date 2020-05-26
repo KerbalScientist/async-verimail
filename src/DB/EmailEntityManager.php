@@ -181,7 +181,13 @@ class EmailEntityManager implements LoggerAwareInterface
         return $this->readConnection->query($sql);
     }
 
-    public function exportToCsvBlocking(string $filename): PromiseInterface
+    /**
+     * @param string               $filename
+     * @param SelectInterface|null $query
+     *
+     * @return PromiseInterface
+     */
+    public function exportToCsvBlocking(string $filename, ?SelectInterface $query = null): PromiseInterface
     {
         $deferred = new Deferred();
         $this->logger->info("Exporting emails to CSV file $filename.");
@@ -189,7 +195,10 @@ class EmailEntityManager implements LoggerAwareInterface
         $f = fopen($filename, 'w');
         $propertyNames = array_column($this->getDbProperties(), 'name');
         fputcsv($f, $propertyNames);
-        $stream = $this->streamByStatus(VerifyStatus::all());
+        if (null === $query) {
+            $query = $this->createSelectQuery();
+        }
+        $stream = $this->streamByQuery($query);
         $stream->on('data', function (Email $email) use ($f) {
             fputcsv($f, $this->hydrationStrategy->dehydrate($email));
         });

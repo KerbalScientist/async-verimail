@@ -7,7 +7,12 @@
 
 namespace App;
 
-require dirname(__DIR__).'/vendor/autoload.php';
-$app = new App();
+use Exception;
 
-return $app->run();
+require dirname(__DIR__).'/vendor/autoload.php';
+
+try {
+    (new Application())->run();
+} catch (Exception $e) {
+    echo "$e";
+}

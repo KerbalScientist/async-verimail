@@ -7,6 +7,7 @@
 
 namespace App;
 
+use App\Command\BaseCommand;
 use App\Config\HostsConfig;
 use App\DB\EmailEntityManager;
 use App\DB\MysqlQueryFactory;
@@ -38,6 +39,12 @@ class ServiceContainer
 
     private bool $verbose = false;
     private bool $quiet = false;
+    /**
+     * @var bool
+     *
+     * @todo Implement.
+     */
+    private bool $debug = false;
     private LoggerInterface $logger;
     private LoopInterface $eventLoop;
     private EmailEntityManager $entityManager;
@@ -49,7 +56,7 @@ class ServiceContainer
     private ResolverInterface $dnsResolver;
     private Verifier $verifier;
     private ConnectorInterface $socketConnector;
-    private App $app;
+    private BaseCommand $command;
     /**
      * @var mixed[]
      */
@@ -57,9 +64,8 @@ class ServiceContainer
         's_status' => VerifyStatus::UNKNOWN,
     ];
 
-    public function __construct(App $app)
+    public function __construct()
     {
-        $this->app = $app;
         $this->hostsConfigFile = dirname(__DIR__).'/config/hosts.yaml';
     }
 
@@ -126,6 +132,11 @@ class ServiceContainer
         return $this->eventLoop;
     }
 
+    public function getEmailFixtures(): EmailFixtures
+    {
+        return new EmailFixtures($this->getEntityManager(), $this->getEventLoop());
+    }
+
     public function getLogger(): LoggerInterface
     {
         if ($this->quiet) {
@@ -138,7 +149,7 @@ class ServiceContainer
             $loggerStream = new WritableResourceStream(STDERR, $this->getEventLoop());
             $dumping->pipe($loggerStream);
             $loggerStream = $dumping;
-            $this->app->on('afterStop', function () use ($loggerStream) {
+            $this->command->on('afterStop', function () use ($loggerStream) {
                 $loggerStream->end();
             });
             /*
@@ -256,6 +267,14 @@ class ServiceContainer
     }
 
     /**
+     * @param BaseCommand $command
+     */
+    public function setCommand(BaseCommand $command): void
+    {
+        $this->command = $command;
+    }
+
+    /**
      * @param string $hostsConfigFile
      */
     public function setHostsConfigFile(string $hostsConfigFile): void
@@ -280,6 +299,17 @@ class ServiceContainer
     public function setQuiet(bool $quiet): void
     {
         $this->quiet = $quiet;
+    }
+
+    /**
+     * @param bool $debug
+     *
+     * @todo Implement.
+     */
+    public function setDebug(bool $debug): void
+    {
+        $this->debug = $debug;
+        $this->verbose = $debug;
     }
 
     /**

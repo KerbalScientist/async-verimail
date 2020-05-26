@@ -13,7 +13,8 @@
         "ext-pcntl": "*",
         "symfony/config": "^5.0",
         "symfony/yaml": "^5.0",
-        "vlucas/phpdotenv": "^4.1"
+        "vlucas/phpdotenv": "^4.1",
+        "symfony/console": "^5.0"
     },
     "require-dev": {
         "symplify/easy-coding-standard": "^7.2",
