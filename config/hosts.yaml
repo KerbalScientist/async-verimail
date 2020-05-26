@@ -34,7 +34,7 @@ hosts:
   "icloud.com":
     resetAfterVerifications: 10
 #  "mail.com": # Need some real host with MX DNS record, which can be checked
-               # by reverse DNS query and resolve to IP from which SMTP connections is made.
+               # by reverse DNS query and resolve to IP from which SMTP connections are performed.
 #    fromEmail: "info@<some real host under control>"
 #    fromHost: "<some real host under control>"
 
