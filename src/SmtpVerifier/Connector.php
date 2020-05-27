@@ -7,6 +7,7 @@
 
 namespace App\SmtpVerifier;
 
+use App\Config\HostsSettingsCollection;
 use App\Mutex;
 use App\SmtpVerifier\ConnectionInterface as VerifierConnectionInterface;
 use App\SmtpVerifier\ConnectorInterface as VerifierConnectorInterface;
@@ -37,26 +38,27 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
      * @var mixed[]
      */
     private array $connectionSettings;
+    private HostsSettingsCollection $settings;
 
     /**
      * Connector constructor.
      *
-     * @param ResolverInterface  $resolver
-     * @param ConnectorInterface $connector
-     * @param Mutex              $mutex
-     * @param mixed[]            $connectionSettings
+     * @param ResolverInterface       $resolver
+     * @param ConnectorInterface      $connector
+     * @param Mutex                   $mutex
+     * @param HostsSettingsCollection $settings
      */
     public function __construct(
         ResolverInterface $resolver,
         ConnectorInterface $connector,
         Mutex $mutex,
-        array $connectionSettings = []
+        HostsSettingsCollection $settings
     ) {
         $this->resolver = $resolver;
         $this->connector = $connector;
         $this->mutex = $mutex;
         $this->logger = new NullLogger();
-        $this->connectionSettings = $connectionSettings ?? [];
+        $this->settings = $settings;
     }
 
     /**
@@ -113,11 +115,8 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
                 $socketConnection = $result;
                 $this->logger->debug("$hostname MX - connected to host".
                     " {$socketConnection->getRemoteAddress()} from {$socketConnection->getLocalAddress()}.");
-                $settings = $this->connectionSettings['default'] ?? [];
-                if (isset($this->connectionSettings[$hostname])) {
-                    $settings = $this->connectionSettings[$hostname] + $settings;
-                }
-                $connection = new Connection($socketConnection, $this->mutex, $hostname, $settings);
+                $connection = new Connection($socketConnection, $this->mutex,
+                    $hostname, $this->settings->findForHostname($hostname));
                 $connection->setLogger($this->logger);
 
                 return $connection;

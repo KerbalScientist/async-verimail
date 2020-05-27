@@ -209,13 +209,10 @@ class ServiceContainer
             $resolver,
             $connector,
             new Mutex($loop),
-            $config->getConnectionSettings()
+            $config->getSettings()
         );
         $verifierConnector->setLogger($logger);
-        $verifierConnector = new ConnectionPool($verifierConnector, $loop, [
-            'maxConnectionsPerHost' => $config->getMaxConnectionsPerHost(),
-            'unreliableHosts' => $config->getUnreliableHosts(),
-        ]);
+        $verifierConnector = new ConnectionPool($verifierConnector, $loop, $config->getSettings());
         $verifierConnector->setLogger($logger);
 
         $this->verifier = new Verifier($verifierConnector, new Mutex($loop), [

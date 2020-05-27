@@ -27,7 +27,7 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
     private ?ConnectionInterface $innerConnection;
     private ConnectorInterface $connector;
     private string $hostname;
-    private int $maxReconnects;
+    private int $maxReconnects = 10;
     private int $reconnects = 0;
     private bool $reconnectLocked = false;
     private int $successfulCalls = 0;
@@ -39,19 +39,24 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
      * @param ConnectionInterface $connection
      * @param ConnectorInterface  $connector
      * @param string              $hostname
-     * @param int                 $maxReconnects
      */
     public function __construct(
         ConnectionInterface $connection,
         ConnectorInterface $connector,
-        string $hostname,
-        int $maxReconnects = 10
+        string $hostname
     ) {
         $this->innerConnection = $connection;
         /* @noinspection PhpFieldAssignmentTypeMismatchInspection */
         $this->setInnerConnectionPromise(resolve($connection));
         $this->connector = $connector;
         $this->hostname = $hostname;
+    }
+
+    /**
+     * @param int $maxReconnects
+     */
+    public function setMaxReconnects(int $maxReconnects): void
+    {
         $this->maxReconnects = $maxReconnects;
     }
 
@@ -182,8 +187,7 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
     {
         $this->innerConnectionPromise
             ->then(function (ConnectionInterface $connection) {
-                if ($this->closed)
-                {
+                if ($this->closed) {
                     return;
                 }
                 $this->closed = true;

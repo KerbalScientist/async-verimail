@@ -7,6 +7,7 @@
 
 namespace App\SmtpVerifier;
 
+use App\Config\HostsSettingsCollection;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
@@ -26,39 +27,31 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
      */
     private array $connectionPool = [];
     /**
-     * @var int[]
-     */
-    private array $maxConnectionsPerHost;
-    /**
      * @var bool[]
      */
-    private array $unreliableHosts;
+    private array $unreliableHosts = [];
     private ConnectionInterface $unreliableConnection;
-    private float $inactiveTimeout;
     private LoopInterface $eventLoop;
+    private HostsSettingsCollection $settings;
 
     /**
      * ConnectionPool constructor.
      *
-     * @param ConnectorInterface $connector
-     * @param LoopInterface      $eventLoop
-     * @param mixed[]            $settings
+     * @param ConnectorInterface      $connector
+     * @param LoopInterface           $eventLoop
+     * @param HostsSettingsCollection $settings
      */
-    public function __construct(ConnectorInterface $connector, LoopInterface $eventLoop, array $settings)
+    public function __construct(ConnectorInterface $connector, LoopInterface $eventLoop, HostsSettingsCollection $settings)
     {
         $this->connector = $connector;
         $this->eventLoop = $eventLoop;
-        $settings['maxConnectionsPerHost'] = $settings['maxConnectionsPerHost'] ?? 1;
-        if (is_array($settings['maxConnectionsPerHost'])) {
-            $this->maxConnectionsPerHost = $settings['maxConnectionsPerHost'];
-        } else {
-            $this->maxConnectionsPerHost = [
-                'default' => intval($settings['maxConnectionsPerHost']),
-            ];
-        }
+        $this->settings = $settings;
         $this->logger = new NullLogger();
-        $this->unreliableHosts = array_flip($settings['unreliableHosts'] ?? []);
-        $this->inactiveTimeout = $settings['inactiveTimeout'] ?? 5;
+        foreach ($settings->getAll() as $hostSettings) {
+            if ($hostSettings->isUnreliable()) {
+                $this->unreliableHosts[$hostSettings->getHostname()] = true;
+            }
+        }
         $this->unreliableConnection = new UnreliableConnection();
     }
 
@@ -68,8 +61,11 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
     public function connect(string $hostname): PromiseInterface
     {
         $hostname = mb_strtolower($hostname);
+        $maxConnections = $this->settings
+            ->findForHostname($hostname)
+            ->getMaxConnections();
         if (empty($this->connectionPool[$hostname])
-            || count($this->connectionPool[$hostname]) < $this->getMaxConnections($hostname)) {
+            || count($this->connectionPool[$hostname]) < $maxConnections) {
             $this->logger->debug("Connection - create for $hostname.");
 
             return $this->getConnection($hostname);
@@ -80,11 +76,6 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
         $this->logger->debug("Connection - reuse busy for $hostname.");
 
         return $this->connectionPool[$hostname][array_rand($this->connectionPool[$hostname])];
-    }
-
-    private function getMaxConnections(string $hostname): int
-    {
-        return $this->maxConnectionsPerHost[$hostname] ?? $this->maxConnectionsPerHost['default'] ?? 1;
     }
 
     private function getConnection(string $hostname): PromiseInterface
@@ -103,10 +94,10 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
         $this->connectionPool[$hostname][$key]
             = $this->connector->connect($hostname)
             ->then(function (ConnectionInterface $connection) use ($hostname) {
-                /**
-                 * @todo Settings.
-                 */
                 $reconnectingConnection = new ReconnectingConnection($connection, $this->connector, $hostname);
+                $reconnectingConnection->setMaxReconnects(
+                    $this->settings->findForHostname($hostname)
+                        ->getMaxReconnects());
                 $reconnectingConnection->setLogger($this->logger);
 
                 return all([
@@ -129,15 +120,24 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
                 };
                 $connection->on('error', $closeCallback);
                 $connection->on('close', $closeCallback);
-                $timer = $this->eventLoop->addTimer(
-                    $this->inactiveTimeout,
-                    function () use ($connection, $hostname) {
-                        $this->logger->debug("Connection activity timeout for host $hostname.");
-                        $connection->close();
-                    });
-                $connection->on('active', function () use ($timer) {
-                    $this->eventLoop->cancelTimer($timer);
+                $timeout = $this->settings->findForHostname($hostname)
+                    ->getInactiveTimeout();
+                if (!$timeout) {
+                    return $connection;
+                }
+                $timer = null;
+                $connection->on('active', function () use (&$timer, $timeout, $connection, $hostname) {
+                    if ($timer) {
+                        $this->eventLoop->cancelTimer($timer);
+                    }
+                    $timer = $this->eventLoop->addTimer(
+                        $timeout,
+                        function () use ($connection, $hostname) {
+                            $this->logger->debug("Connection activity timeout for host $hostname.");
+                            $connection->close();
+                        });
                 });
+                $connection->emit('active');
 
                 return $connection;
             });

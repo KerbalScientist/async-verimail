@@ -43,9 +43,9 @@ class HostsConfig implements ConfigurationInterface
                     ->integerNode('closeAfterVerifications')
                         ->info('Close and reopen SMTP connection after specified count of verifications.')
                         ->treatNullLike(0)->end()
-                    ->integerNode('inactiveTimeout')
-                        ->info('Not implemented. Close connection after specified amount of inactivity time in seconds.')
-                        ->treatNullLike(0)->end()
+                    ->floatNode('inactiveTimeout')
+                        ->info('Close connection after specified amount of inactivity time in seconds.')
+                        ->treatNullLike(0.0)->end()
                     ->scalarNode('randomUser')
                         ->info('Non-existing user (part of email before "@") used to check if server is reliable.'.
                             ' If server accepts non-existing email, it is unreliable.')
@@ -77,37 +77,17 @@ class HostsConfig implements ConfigurationInterface
         $this->config = $processor->processConfiguration($this, [$this->config, $config]);
     }
 
-    /**
-     * @return int[]
-     */
-    public function getMaxConnectionsPerHost(): array
+    public function getSettings(): HostsSettingsCollection
     {
-        return array_map(function ($item) {
-            return $item['maxConnections'] ?? null;
-        }, $this->configFilterKeyExists($this->config, 'maxConnections'));
-    }
+        $objects = [];
+        foreach ($this->config as $hostname => $item) {
+            $objects[$hostname] = new HostSettings($hostname, $item);
+        }
 
-    /**
-     * @return string[]
-     */
-    public function getUnreliableHosts(): array
-    {
-        return array_keys(
-            $this->configFilterValueEquals($this->config, 'unreliable', true));
-    }
-
-    /**
-     * @return array[]
-     */
-    public function getConnectionSettings(): array
-    {
-        return $this->arrayColumns($this->config, [
-            'resetAfterVerifications',
-            'closeAfterVerifications',
-            'randomUser',
-            'fromEmail',
-            'fromHost',
-        ]);
+        return new HostsSettingsCollection(
+            $objects[HostSettings::HOSTNAME_DEFAULT] ?? new HostSettings(),
+            $objects
+        );
     }
 
     /**

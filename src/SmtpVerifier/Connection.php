@@ -7,6 +7,7 @@
 
 namespace App\SmtpVerifier;
 
+use App\Config\HostSettings;
 use App\Mutex;
 use App\SmtpVerifier\ConnectionInterface as VerifierConnectionInterface;
 use Evenement\EventEmitterTrait;
@@ -70,21 +71,26 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
      * @param ConnectionInterface $connection
      * @param Mutex               $mutex
      * @param string              $hostname
-     * @param mixed[]             $settings
+     * @param HostSettings|null   $settings
      */
-    public function __construct(ConnectionInterface $connection, Mutex $mutex, string $hostname, array $settings)
-    {
+    public function __construct(
+        ConnectionInterface $connection,
+        Mutex $mutex,
+        string $hostname,
+        ?HostSettings $settings = null
+    ) {
         $this->connection = $connection;
         $this->mutex = $mutex;
         $this->hostname = $hostname;
         $this->logger = new NullLogger();
-        $this->fromEmail = $settings['fromEmail'] ?? 'test@example.com';
-        $this->fromHost = $settings['fromHost'] ?? 'localhost';
-        $this->resetAfterVerifications = $settings['resetAfterVerifications'] ?? 25;
-        $this->closeAfterVerifications = $settings['closeAfterVerifications'] ?? 0;
-        /* @noinspection SpellCheckingInspection */
-        $this->randomUser = $settings['randomUser']
-            ?? 'mo4rahpheix8ti7ohT0eoku0oisien6ohKaenuutareiCei3ad9Ibedoogh6quie';
+        if (!$settings) {
+            $settings = new HostSettings();
+        }
+        $this->fromEmail = $settings->getFromEmail();
+        $this->fromHost = $settings->getFromHost();
+        $this->resetAfterVerifications = $settings->getResetAfterVerifications();
+        $this->closeAfterVerifications = $settings->getCloseAfterVerifications();
+        $this->randomUser = $settings->getRandomUser();
         $this->remoteAddress = $this->connection->getRemoteAddress();
         $this->localAddress = $this->connection->getLocalAddress();
     }
