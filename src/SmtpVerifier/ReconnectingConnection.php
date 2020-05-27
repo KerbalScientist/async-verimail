@@ -21,13 +21,13 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
     use LoggerAwareTrait;
 
     /**
-     * @var PromiseInterface resolves to ConnectorInterface
+     * @var PromiseInterface resolves to ConnectionInterface
      */
     private PromiseInterface $innerConnectionPromise;
     private ?ConnectionInterface $innerConnection;
     private ConnectorInterface $connector;
     private string $hostname;
-    private int $maxFailedReconnects;
+    private int $maxReconnects;
     private int $reconnects = 0;
     private bool $reconnectLocked = false;
     private int $successfulCalls = 0;
@@ -38,21 +38,20 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
      * @param ConnectionInterface $connection
      * @param ConnectorInterface  $connector
      * @param string              $hostname
-     * @param mixed[]             $settings
+     * @param int                 $maxReconnects
      */
     public function __construct(
         ConnectionInterface $connection,
         ConnectorInterface $connector,
         string $hostname,
-        array $settings = []
+        int $maxReconnects = 10
     ) {
         $this->innerConnection = $connection;
-        Util::forwardEvents($connection, $this, ['close', 'error', 'active']);
         /* @noinspection PhpFieldAssignmentTypeMismatchInspection */
-        $this->innerConnectionPromise = resolve($connection);
+        $this->setInnerConnectionPromise(resolve($connection));
         $this->connector = $connector;
         $this->hostname = $hostname;
-        $this->maxFailedReconnects = $settings['maxReconnects'] ?? 10;
+        $this->maxReconnects = $maxReconnects;
     }
 
     /**
@@ -111,7 +110,7 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
 
     private function isOverReconnectLimit(): bool
     {
-        return $this->maxFailedReconnects && $this->reconnects > $this->maxFailedReconnects;
+        return $this->maxReconnects && $this->reconnects > $this->maxReconnects;
     }
 
     private function reconnect(): void
@@ -141,6 +140,7 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
             })
             ->then(function (ConnectionInterface $connection) {
                 $this->innerConnection = $connection;
+                Util::forwardEvents($this->innerConnection, $this, ['active']);
                 $this->reconnectLocked = false;
                 if ($this->isOverReconnectLimit()) {
                     $this->logger->debug("Connection to $this->hostname is over reconnect limit.");
