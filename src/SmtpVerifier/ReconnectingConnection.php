@@ -31,6 +31,7 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
     private int $reconnects = 0;
     private bool $reconnectLocked = false;
     private int $successfulCalls = 0;
+    private bool $closed = false;
 
     /**
      * ReconnectingConnection constructor.
@@ -86,7 +87,7 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
             ->then(function (ConnectionInterface $connection) use ($methodName, $args) {
                 return $connection->$methodName(...$args);
             });
-        if ($this->isOverReconnectLimit()) {
+        if ($this->isOverReconnectLimit() || $this->closed) {
             return $result;
         }
 
@@ -144,7 +145,8 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
                 $this->reconnectLocked = false;
                 if ($this->isOverReconnectLimit()) {
                     $this->logger->debug("Connection to $this->hostname is over reconnect limit.");
-                    Util::forwardEvents($this->innerConnection, $this, ['close', 'error']);
+                    Util::forwardEvents($this->innerConnection, $this, ['error']);
+                    $this->innerConnection->on('close', [$this, 'close']);
                 }
 
                 return $connection;
@@ -180,7 +182,13 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
     {
         $this->innerConnectionPromise
             ->then(function (ConnectionInterface $connection) {
+                if ($this->closed)
+                {
+                    return;
+                }
+                $this->closed = true;
                 $connection->close();
+                $this->emit('close');
             });
     }
 }
