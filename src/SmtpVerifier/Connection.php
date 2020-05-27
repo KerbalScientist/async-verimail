@@ -246,9 +246,6 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
             $this->setEventListeners();
         }
 
-        /**
-         * @todo Try without onRejected.
-         */
         $callback = function () use ($deferred) {
             return $deferred->promise()
                 ->then(function ($data) {

@@ -39,8 +39,6 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
      * @param ConnectorInterface  $connector
      * @param string              $hostname
      * @param mixed[]             $settings
-     *
-     * @todo Events pipe.
      */
     public function __construct(
         ConnectionInterface $connection,
@@ -116,9 +114,6 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
         return $this->maxFailedReconnects && $this->reconnects > $this->maxFailedReconnects;
     }
 
-    /**
-     * @todo maxReconnects
-     */
     private function reconnect(): void
     {
         if ($this->reconnectLocked) {

@@ -41,8 +41,6 @@ class ServiceContainer
     private bool $quiet = false;
     /**
      * @var bool
-     *
-     * @todo Implement.
      */
     private bool $debug = false;
     private LoggerInterface $logger;

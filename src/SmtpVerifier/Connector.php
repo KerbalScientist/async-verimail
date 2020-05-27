@@ -62,7 +62,7 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
     /**
      * {@inheritdoc}
      *
-     * @todo Refactor. Move MX server connection creation to separate socket connector.
+     * @todo Refactor. Extract MX server socket connection creation to method.
      */
     public function connect(string $hostname): PromiseInterface
     {
