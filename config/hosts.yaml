@@ -14,7 +14,7 @@ hosts:
     maxConnections: 10
     resetAfterVerifications: 25
   "gmail.com":
-    maxConnections: 10
+    maxConnections: 60
     resetAfterVerifications: 10
   "mail.ru":
     unreliable: true
