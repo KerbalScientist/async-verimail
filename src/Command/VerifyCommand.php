@@ -14,6 +14,7 @@ use React\Stream\ReadableStreamInterface;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use function App\pipeThrough;
@@ -31,7 +32,9 @@ class VerifyCommand extends BaseCommand
             ->addUsage('--filter=\'{"m_mail":["NOT LIKE","%@mail.ru"],'.
                 '"s_status":  "unknown","dt_updated":["<", "2020-05-20 00:00"], "#limit": 100}\' --proxy="127.0.0.1:10000"')
             ->addOption('proxy', 'x', InputArgument::OPTIONAL,
-                'SOCKS5 proxy IP:PORT');
+                'SOCKS5 proxy IP:PORT')
+            ->addOption('hosts-config', 'hc', InputOption::VALUE_OPTIONAL,
+                'Path to hosts.yaml');
     }
 
     /**

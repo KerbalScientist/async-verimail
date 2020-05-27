@@ -13,7 +13,6 @@ use LogicException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -47,9 +46,7 @@ abstract class BaseCommand extends Command
              * @todo Filter option is needed not for all commands.
              */
             ->addOption('filter', 'f', InputArgument::OPTIONAL,
-                'JSON email filter')
-            ->addOption('hosts-config', 'hc', InputOption::VALUE_OPTIONAL,
-                'Path to hosts.yaml');
+                'JSON email filter');
     }
 
     protected function initialize(InputInterface $input, OutputInterface $output): void
