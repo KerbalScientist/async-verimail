@@ -17,9 +17,10 @@ class GenerateFixturesCommand extends BaseCommand
 
     protected function configure(): void
     {
-        parent::configure();
-        $this->addArgument('count', InputArgument::REQUIRED,
-            'Emails count to generate.');
+        $this
+            ->setDescription('Generate random emails for testing')
+            ->addArgument('count', InputArgument::REQUIRED,
+            'Emails count to generate');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)

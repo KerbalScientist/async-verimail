@@ -18,7 +18,9 @@ class ExportCommand extends BaseCommand
     protected function configure(): void
     {
         parent::configure();
-        $this->addArgument('filename', InputArgument::REQUIRED,
+        $this
+            ->setDescription('Export emails to CSV file')
+            ->addArgument('filename', InputArgument::REQUIRED,
             "CSV file path to export emails to. First row contains header.\n".
             ' Field names are same as DB column names.');
     }

@@ -14,6 +14,11 @@ class InstallCommand extends BaseCommand
 {
     protected static $defaultName = 'install';
 
+    protected function configure(): void
+    {
+        $this->setDescription('Install DB schema');
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->setExecutePromise(

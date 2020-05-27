@@ -17,8 +17,9 @@ class ImportCommand extends BaseCommand
 
     protected function configure(): void
     {
-        parent::configure();
-        $this->addArgument('filename', InputArgument::REQUIRED,
+        $this
+            ->setDescription('Import emails from CSV file')
+            ->addArgument('filename', InputArgument::REQUIRED,
             "CSV file path to import emails from. First row contains header.\n".
             ' Field names are same as DB column names. Field m_mail is required, others are optional.');
     }

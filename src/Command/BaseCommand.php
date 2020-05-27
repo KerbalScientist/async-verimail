@@ -47,9 +47,9 @@ abstract class BaseCommand extends Command
              * @todo Filter option is needed not for all commands.
              */
             ->addOption('filter', 'f', InputArgument::OPTIONAL,
-                'JSON email filter.')
+                'JSON email filter')
             ->addOption('hosts-config', 'hc', InputOption::VALUE_OPTIONAL,
-                'Path to hosts.yaml.');
+                'Path to hosts.yaml');
     }
 
     protected function initialize(InputInterface $input, OutputInterface $output): void

@@ -24,10 +24,11 @@ class ShowCommand extends BaseCommand
     {
         parent::configure();
         $this
+            ->setDescription('Show emails from DB')
             ->addUsage('--filter=\'{"m_mail":["NOT LIKE","%@mail.ru"],'.
                 '"s_status":  "unknown","dt_updated":["<", "2020-05-20 00:00"], "#limit": 100}\' 1')
             ->addArgument('min-interval', InputArgument::OPTIONAL,
-            'Minimum interval between rows output in seconds.', '0');
+            'Each next row will be printed after min-interval seconds passed', '0');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
