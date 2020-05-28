@@ -5,10 +5,10 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-namespace App\SmtpVerifier;
+namespace App\Verifier;
 
 use RuntimeException;
 
-class AuthenticationRequiredException extends RuntimeException
+class TooManyRecipientsException extends RuntimeException
 {
 }

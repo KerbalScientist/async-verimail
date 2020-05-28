@@ -19,7 +19,7 @@ parameters:
             paths:
                 - src/Stream/BufferedThroughStreamTrait.php
                 - src/Stream/ThroughStream.php
-                - src/SmtpVerifier/Connection.php
+                - src/Verifier/Connection.php
 
 parametersSchema:
     ergebnis: structure([

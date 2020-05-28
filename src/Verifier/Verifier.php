@@ -5,19 +5,14 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-namespace App;
+namespace App\Verifier;
 
 use App\Entity\Email;
 use App\Entity\VerifyStatus;
-use App\SmtpVerifier\AuthenticationRequiredException;
-use App\SmtpVerifier\ConnectionClosedException;
-use App\SmtpVerifier\ConnectionInterface;
-use App\SmtpVerifier\ConnectorInterface;
-use App\SmtpVerifier\Message;
-use App\SmtpVerifier\NoMxRecordsException;
-use App\SmtpVerifier\OverQuotaException;
-use App\SmtpVerifier\SenderBlockedException;
-use App\SmtpVerifier\UnexpectedReplyException;
+use App\Mutex;
+use App\Smtp\ConnectionClosedException;
+use App\Smtp\Message;
+use App\Smtp\NoMxRecordsException;
 use App\Stream\CollectingThroughStream;
 use App\Stream\ResolvingThroughStream;
 use App\Stream\ThroughStream;
@@ -31,6 +26,7 @@ use React\Stream\CompositeStream;
 use React\Stream\DuplexStreamInterface;
 use React\Stream\Util;
 use Throwable;
+use function App\pipeThrough;
 use function React\Promise\all;
 use function React\Promise\resolve;
 

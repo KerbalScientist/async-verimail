@@ -5,7 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-namespace App\SmtpVerifier;
+namespace App\Verifier;
 
 use App\Config\HostsSettingsCollection;
 use Psr\Log\LoggerAwareInterface;
@@ -16,7 +16,7 @@ use React\Promise\PromiseInterface;
 use function React\Promise\all;
 use function React\Promise\resolve;
 
-class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
+class ConnectionPool implements LoggerAwareInterface, ConnectorInterface
 {
     use LoggerAwareTrait;
 
@@ -94,15 +94,15 @@ class ConnectionPool implements ConnectorInterface, LoggerAwareInterface
         $this->connectionPool[$hostname][$key]
             = $this->connector->connect($hostname)
             ->then(function (ConnectionInterface $connection) use ($hostname) {
-                $reconnectingConnection = new ReconnectingConnection($connection, $this->connector, $hostname);
-                $reconnectingConnection->setMaxReconnects(
-                    $this->settings->findForHostname($hostname)
-                        ->getMaxReconnects());
-                $reconnectingConnection->setLogger($this->logger);
+                $connection = new ReconnectingConnection($connection, $this->connector, $hostname);
+                $connection->setMaxReconnects($this->settings
+                    ->findForHostname($hostname)
+                    ->getMaxReconnects());
+                $connection->setLogger($this->logger);
 
                 return all([
-                    'connection' => $reconnectingConnection,
-                    'isReliable' => $reconnectingConnection->isReliable(),
+                    'connection' => $connection,
+                    'isReliable' => $connection->isReliable(),
                 ]);
             })
             ->then(function ($result) use ($hostname, $key) {

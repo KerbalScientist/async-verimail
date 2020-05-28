@@ -5,8 +5,9 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-namespace App\SmtpVerifier;
+namespace App\Verifier;
 
+use App\Smtp\ConnectionClosedException;
 use Evenement\EventEmitterTrait;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -138,13 +139,6 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
         $this->innerConnection = null;
         $this->innerConnectionPromise = $innerConnectionPromise
             ->then(function (ConnectionInterface $connection) {
-                if ($connection instanceof self) {
-                    return $connection->getInnerConnectionPromise();
-                }
-
-                return $connection;
-            })
-            ->then(function (ConnectionInterface $connection) {
                 $this->innerConnection = $connection;
                 Util::forwardEvents($this->innerConnection, $this, ['active']);
                 $this->reconnectLocked = false;
@@ -162,14 +156,6 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
 
                 throw $e;
             });
-    }
-
-    /**
-     * @return PromiseInterface
-     */
-    public function getInnerConnectionPromise(): PromiseInterface
-    {
-        return $this->innerConnectionPromise;
     }
 
     /**

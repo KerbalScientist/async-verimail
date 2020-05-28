@@ -5,7 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-namespace App\SmtpVerifier;
+namespace App\Smtp;
 
 use InvalidArgumentException;
 
@@ -130,29 +130,5 @@ final class Message
             '/\b(not accepting network messages|timeout)\b/i',
             $this->data
         );
-    }
-
-    /**
-     * @throws SenderBlockedException|OverQuotaException|AuthenticationRequiredException|UnexpectedReplyException|TooManyRecipientsException
-     */
-    public function throwSenderStatusException(): void
-    {
-        if (self::STATE_OK !== $this->connectionState) {
-            $message = 'Server reply: '.$this->data;
-        } else {
-            $message = '';
-        }
-        switch ($this->connectionState) {
-            case self::STATE_AUTH_NEEDED:
-                throw new AuthenticationRequiredException($message);
-            case self::STATE_OVER_QUOTA:
-                throw new OverQuotaException($message);
-            case self::STATE_SENDER_BLOCKED:
-                throw new SenderBlockedException($message);
-            case self::STATE_TOO_MANY_RECIPIENTS:
-                throw new TooManyRecipientsException($message);
-            case self::STATE_ABOUT_TO_CLOSE:
-                throw new ConnectionClosedException($message);
-        }
     }
 }

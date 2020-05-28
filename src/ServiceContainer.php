@@ -12,9 +12,11 @@ use App\Config\HostsConfig;
 use App\DB\EmailEntityManager;
 use App\DB\MysqlQueryFactory;
 use App\Entity\VerifyStatus;
-use App\SmtpVerifier\ConnectionPool;
-use App\SmtpVerifier\Connector;
+use App\Verifier\ConnectionPool;
+use App\Smtp\Connector as SmtpConnector;
 use App\Stream\ThroughStream;
+use App\Verifier\Connector as VerifierConnector;
+use App\Verifier\Verifier;
 use Aura\SqlQuery\Common\SelectInterface;
 use Clue\React\Socks\Client as SocksClient;
 use Exception;
@@ -27,6 +29,7 @@ use React\Dns\Resolver\ResolverInterface;
 use React\EventLoop\LoopInterface;
 use React\MySQL\ConnectionInterface;
 use React\MySQL\Factory;
+use React\Socket\Connector as SocketConnector;
 use React\Socket\ConnectorInterface;
 use React\Stream\WritableResourceStream;
 use ReactPHP\MySQL\Decorator\BindAssocParamsConnectionDecorator;
@@ -205,12 +208,15 @@ class ServiceContainer
         $connector = $this->getSocketConnector();
         $loop = $this->getEventLoop();
         $logger = $this->getLogger();
-        $verifierConnector = new Connector(
+        $mutex = new Mutex($loop);
+        $settings = $config->getSettings();
+        $verifierConnector = new SmtpConnector(
             $resolver,
             $connector,
-            new Mutex($loop),
-            $config->getSettings()
+            $mutex
         );
+        $verifierConnector->setLogger($logger);
+        $verifierConnector = new VerifierConnector($verifierConnector, $mutex, $settings);
         $verifierConnector->setLogger($logger);
         $verifierConnector = new ConnectionPool($verifierConnector, $loop, $config->getSettings());
         $verifierConnector->setLogger($logger);
@@ -226,7 +232,7 @@ class ServiceContainer
     public function getSocketConnector(): ConnectorInterface
     {
         if (!isset($this->socketConnector)) {
-            $this->socketConnector = new \React\Socket\Connector($this->getEventLoop(), [
+            $this->socketConnector = new SocketConnector($this->getEventLoop(), [
                 'timeout' => (int) $this->getEnvConfigValue('CONNECT_TIMEOUT', 30),
             ]);
             if (isset($this->proxy)) {

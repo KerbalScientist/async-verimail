@@ -5,7 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-namespace App\SmtpVerifier;
+namespace App\Smtp;
 
 use React\Promise\PromiseInterface;
 
@@ -14,7 +14,7 @@ interface ConnectorInterface
     /**
      * @param string $hostname
      *
-     * @return PromiseInterface resolves to Connection
+     * @return PromiseInterface resolves to \App\SmtpVerifier\ConnectionInterface
      */
     public function connect(string $hostname): PromiseInterface;
 }

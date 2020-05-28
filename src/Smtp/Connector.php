@@ -5,12 +5,9 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-namespace App\SmtpVerifier;
+namespace App\Smtp;
 
-use App\Config\HostsSettingsCollection;
 use App\Mutex;
-use App\SmtpVerifier\ConnectionInterface as VerifierConnectionInterface;
-use App\SmtpVerifier\ConnectorInterface as VerifierConnectorInterface;
 use InvalidArgumentException;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -20,45 +17,37 @@ use React\Dns\RecordNotFoundException;
 use React\Dns\Resolver\ResolverInterface;
 use React\Promise\PromiseInterface;
 use React\Socket\ConnectionInterface as SocketConnectionInterface;
-use React\Socket\ConnectorInterface;
+use React\Socket\ConnectorInterface as SocketConnectorInterface;
 use RuntimeException;
 use Throwable;
 use function React\Promise\reject;
 
-class Connector implements LoggerAwareInterface, VerifierConnectorInterface
+class Connector implements LoggerAwareInterface, ConnectorInterface
 {
     use LoggerAwareTrait;
 
     private const MX_DOMAIN_COLUMN = 'target';
     private const MX_PORT = 25;
     private ResolverInterface $resolver;
-    private ConnectorInterface $connector;
+    private SocketConnectorInterface $connector;
     private Mutex $mutex;
-    /**
-     * @var mixed[]
-     */
-    private array $connectionSettings;
-    private HostsSettingsCollection $settings;
 
     /**
      * Connector constructor.
      *
-     * @param ResolverInterface       $resolver
-     * @param ConnectorInterface      $connector
-     * @param Mutex                   $mutex
-     * @param HostsSettingsCollection $settings
+     * @param ResolverInterface        $resolver
+     * @param SocketConnectorInterface $connector
+     * @param Mutex                    $mutex
      */
     public function __construct(
         ResolverInterface $resolver,
-        ConnectorInterface $connector,
-        Mutex $mutex,
-        HostsSettingsCollection $settings
+        SocketConnectorInterface $connector,
+        Mutex $mutex
     ) {
         $this->resolver = $resolver;
         $this->connector = $connector;
         $this->mutex = $mutex;
         $this->logger = new NullLogger();
-        $this->settings = $settings;
     }
 
     /**
@@ -104,19 +93,18 @@ class Connector implements LoggerAwareInterface, VerifierConnectorInterface
                 throw new RuntimeException("Unable to connect to any MX server for $hostname.", 0, $e);
             })
             ->then(function ($result) use ($hostname) {
-                if ($result instanceof VerifierConnectionInterface) {
+                if ($result instanceof ConnectionInterface) {
                     return $result;
                 }
                 if (!$result instanceof SocketConnectionInterface) {
                     return reject(new InvalidArgumentException(
                         'Result must implement '.SocketConnectionInterface::class.
-                        ' or '.VerifierConnectionInterface::class.'.'));
+                        ' or '.ConnectionInterface::class.'.'));
                 }
                 $socketConnection = $result;
                 $this->logger->debug("$hostname MX - connected to host".
                     " {$socketConnection->getRemoteAddress()} from {$socketConnection->getLocalAddress()}.");
-                $connection = new Connection($socketConnection, $this->mutex,
-                    $hostname, $this->settings->findForHostname($hostname));
+                $connection = new Connection($socketConnection, $this->mutex);
                 $connection->setLogger($this->logger);
 
                 return $connection;
