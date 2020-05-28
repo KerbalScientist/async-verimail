@@ -8,7 +8,6 @@
 namespace App\Smtp;
 
 use App\Mutex;
-use InvalidArgumentException;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
@@ -20,13 +19,13 @@ use React\Socket\ConnectionInterface as SocketConnectionInterface;
 use React\Socket\ConnectorInterface as SocketConnectorInterface;
 use RuntimeException;
 use Throwable;
-use function React\Promise\reject;
 
 class Connector implements LoggerAwareInterface, ConnectorInterface
 {
     use LoggerAwareTrait;
 
-    private const MX_DOMAIN_COLUMN = 'target';
+    private const MX_RECORD_HOSTNAME_COLUMN = 'target';
+    private const MX_RECORD_PRIORITY_COLUMN = 'priority';
     private const MX_PORT = 25;
     private ResolverInterface $resolver;
     private SocketConnectorInterface $connector;
@@ -52,21 +51,24 @@ class Connector implements LoggerAwareInterface, ConnectorInterface
 
     /**
      * {@inheritdoc}
-     *
-     * @todo Refactor. Extract MX server socket connection creation to method.
      */
     public function connect(string $hostname): PromiseInterface
     {
-        $hostname = mb_strtolower($hostname);
+        return $this->createSocketConnection($hostname)
+            ->then(function (SocketConnectionInterface $socketConnection) use ($hostname) {
+                $this->logger->debug("$hostname MX - connected to host".
+                    " {$socketConnection->getRemoteAddress()} from {$socketConnection->getLocalAddress()}.");
+                $connection = new Connection($socketConnection, $this->mutex);
+                $connection->setLogger($this->logger);
 
+                return $connection;
+            });
+    }
+
+    private function createSocketConnection(string $hostname): PromiseInterface
+    {
         return $this->resolveMxRecords($hostname)
-            ->then(function ($records) use ($hostname) {
-                /**
-                 * @todo Cache first alive host.
-                 * @todo Respect records priority.
-                 * @todo Extract method.
-                 */
-                $mxHosts = array_column($records, self::MX_DOMAIN_COLUMN);
+            ->then(function ($mxHosts) use ($hostname) {
                 $this->logger->debug("MX hosts found for $hostname: ".implode(', ', $mxHosts));
                 $socketConnection = null;
                 $result = null;
@@ -91,23 +93,6 @@ class Connector implements LoggerAwareInterface, ConnectorInterface
                 }
 
                 throw new RuntimeException("Unable to connect to any MX server for $hostname.", 0, $e);
-            })
-            ->then(function ($result) use ($hostname) {
-                if ($result instanceof ConnectionInterface) {
-                    return $result;
-                }
-                if (!$result instanceof SocketConnectionInterface) {
-                    return reject(new InvalidArgumentException(
-                        'Result must implement '.SocketConnectionInterface::class.
-                        ' or '.ConnectionInterface::class.'.'));
-                }
-                $socketConnection = $result;
-                $this->logger->debug("$hostname MX - connected to host".
-                    " {$socketConnection->getRemoteAddress()} from {$socketConnection->getLocalAddress()}.");
-                $connection = new Connection($socketConnection, $this->mutex);
-                $connection->setLogger($this->logger);
-
-                return $connection;
             });
     }
 
@@ -128,8 +113,11 @@ class Connector implements LoggerAwareInterface, ConnectorInterface
             if ($error) {
                 throw $error;
             }
+            usort($result, function ($item1, $item2) {
+                return ($item1[self::MX_RECORD_PRIORITY_COLUMN] ?? 0) - ($item2[self::MX_RECORD_PRIORITY_COLUMN] ?? 0);
+            });
 
-            return $result;
+            return array_column($result, self::MX_RECORD_HOSTNAME_COLUMN);
         };
 
         return $this->resolver->resolveAll($hostname, Message::TYPE_MX)
