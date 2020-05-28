@@ -127,6 +127,7 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
             if ($this->closedException) {
                 return reject($this->closedException);
             }
+            $this->busy = true;
             $promises = [];
             if ($this->closeAfterVerifications && $this->enqueuedCount >= $this->closeAfterVerifications) {
                 $promises[] = $this->sendCommand('QUIT');
