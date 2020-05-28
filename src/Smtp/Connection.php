@@ -26,7 +26,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
     use LoggerAwareTrait;
     use EventEmitterTrait;
 
-    const REPLY_SEPARATOR = "\r\n";
+    const MESSAGE_SEPARATOR = "\r\n";
     const MESSAGE_LINE_SEPARATOR = "\n";
     const MULTILINE_REPLY_MARKER = '-';
 
@@ -41,6 +41,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
     private string $remoteAddress;
     private string $localAddress;
     private PromiseInterface $openingMessage;
+    private ?Deferred $drainDeferred = null;
 
     /**
      * SmtpVerifierConnection constructor.
@@ -83,13 +84,24 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
             }
             $this->logger->debug("To {$this->getRemoteAddress()}".
                 " from {$this->getLocalAddress()}: $name$data");
-            /*
-             * @todo Respect return value. It will be false if buffer is full.
-             *   In this case we must pause until drain event.
-             */
-            $this->connection->write($name.$data.self::REPLY_SEPARATOR);
+            $onDrained = function () use ($name, $data) {
+                $result = $this->connection->write($name.$data.self::MESSAGE_SEPARATOR);
+                if (!$result) {
+                    $this->drainDeferred = new Deferred();
+                    $this->connection->once('drain', function () {
+                        $this->drainDeferred->resolve();
+                        $this->drainDeferred = null;
+                    });
+                }
 
-            return $this->receiveReply(false);
+                return $this->receiveReply(false);
+            };
+            if ($this->drainDeferred) {
+                return $this->drainDeferred->promise()
+                    ->then($onDrained);
+            }
+
+            return $onDrained();
         });
     }
 
@@ -141,7 +153,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
     private function setEventListeners(): void
     {
         $this->connection->on('data', function ($data) {
-            if (false === strpos($data, self::REPLY_SEPARATOR)) {
+            if (false === strpos($data, self::MESSAGE_SEPARATOR)) {
                 // Reply part received.
                 $this->replyBuffer .= $data;
 
@@ -150,7 +162,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
             $this->logger->debug("From {$this->getRemoteAddress()}".
                 " to {$this->getLocalAddress()}: $data");
             // Reply line received.
-            $separated = explode(self::REPLY_SEPARATOR,
+            $separated = explode(self::MESSAGE_SEPARATOR,
                 $this->replyBuffer.$data);
             $this->replyBuffer = array_pop($separated) ?? '';
             $replyMultiline = '';
@@ -178,30 +190,26 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
                 $this->replyDeferred = null;
             }
         });
-        $this->connection->on('error', function ($error) {
-            $this->logger->debug("Connection error from {$this->getRemoteAddress()}".
+        $onCloseError = function ($error = null) {
+            $action = (null === $error) ? 'closed' : 'error';
+            $this->logger->debug("Connection $action from {$this->getRemoteAddress()}".
                 " to {$this->getLocalAddress()}.");
             if (!$this->closedException) {
-                $this->closedException = new ConnectionClosedException('Connection error.', 0, $error);
+                $this->closedException = new ConnectionClosedException("Connection $action.", 0, $error);
             }
-            $this->emit('error', [$error]);
+            if (null !== $error) {
+                $this->emit('error', [$error]);
+            }
             $this->close();
+            if ($this->drainDeferred) {
+                $this->drainDeferred->reject($this->closedException);
+            }
             if ($this->replyDeferred) {
                 $this->replyDeferred->reject($this->closedException);
             }
-        });
-        $this->connection->on('close', function () {
-            $this->logger->debug("Connection closed from {$this->getRemoteAddress()}".
-                " to {$this->getLocalAddress()}.");
-            if (!$this->closedException) {
-                $this->closedException = new ConnectionClosedException('Connection closed.');
-            }
-            $this->close();
-
-            if ($this->replyDeferred) {
-                $this->replyDeferred->reject($this->closedException);
-            }
-        });
+        };
+        $this->connection->on('error', $onCloseError);
+        $this->connection->on('close', $onCloseError);
     }
 
     public function close(): void
