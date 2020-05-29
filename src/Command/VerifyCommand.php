@@ -78,7 +78,6 @@ class VerifyCommand extends BaseCommand
         });
         $this->on('beforeStop', function () use ($persistingStream, $queryStream, $verifyingStream) {
             $this->addResolveBeforeStop($persistingStream->flush());
-            $persistingStream->close();
             $verifyingStream->close();
             $queryStream->close();
         });
