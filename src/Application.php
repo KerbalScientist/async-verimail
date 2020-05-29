@@ -12,6 +12,7 @@ use App\Command\GenerateFixturesCommand;
 use App\Command\ImportCommand;
 use App\Command\InstallCommand;
 use App\Command\ShowCommand;
+use App\Command\UninstallCommand;
 use App\Command\VerifyCommand;
 use Dotenv\Dotenv;
 
@@ -46,6 +47,7 @@ class Application extends \Symfony\Component\Console\Application
     {
         return array_merge(parent::getDefaultCommands(), [
             new InstallCommand($this->container),
+            new UninstallCommand($this->container),
             new VerifyCommand($this->container),
             new ShowCommand($this->container),
             new ImportCommand($this->container),

@@ -182,6 +182,14 @@ class EmailEntityManager implements LoggerAwareInterface
         return $this->readConnection->query($sql);
     }
 
+    public function uninstallSchema(): PromiseInterface
+    {
+        $sql = "DROP TABLE `$this->tableName`";
+        $this->logger->debugQuery($sql);
+
+        return $this->readConnection->query($sql);
+    }
+
     /**
      * @param string               $filename
      * @param SelectInterface|null $query
