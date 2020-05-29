@@ -14,7 +14,6 @@ use App\DB\MysqlQueryFactory;
 use App\Entity\VerifyStatus;
 use App\MutexRun\Factory as MutexFactory;
 use App\Smtp\Connector as SmtpConnector;
-use App\Stream\ThroughStream;
 use App\Verifier\ConnectionPool;
 use App\Verifier\Connector as VerifierConnector;
 use App\Verifier\Verifier;
@@ -23,19 +22,18 @@ use Clue\React\Socks\Client as SocksClient;
 use Exception;
 use LogicException;
 use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
 use React\Dns\Config\Config as DnsConfig;
+use React\Dns\Resolver\Factory as ResolverFactory;
 use React\Dns\Resolver\ResolverInterface;
+use React\EventLoop\Factory as LoopFactory;
 use React\EventLoop\LoopInterface;
 use React\MySQL\ConnectionInterface;
 use React\MySQL\Factory as MysqlFactory;
 use React\Socket\Connector as SocketConnector;
 use React\Socket\ConnectorInterface;
-use React\Stream\WritableResourceStream;
 use ReactPHP\MySQL\Decorator\BindAssocParamsConnectionDecorator;
 use Symfony\Component\Yaml\Yaml;
-use WyriHaximus\React\PSR3\Stdio\StdioLogger;
 
 class ServiceContainer
 {
@@ -128,7 +126,7 @@ class ServiceContainer
     public function getEventLoop(): LoopInterface
     {
         if (!isset($this->eventLoop)) {
-            $this->eventLoop = \React\EventLoop\Factory::create();
+            $this->eventLoop = LoopFactory::create();
         }
 
         return $this->eventLoop;
@@ -141,36 +139,8 @@ class ServiceContainer
 
     public function getLogger(): LoggerInterface
     {
-        if ($this->quiet) {
-            return new NullLogger();
-        }
         if (!isset($this->logger)) {
-            $dumping = new ThroughStream(function ($data) {
-                return $data;
-            });
-            $loggerStream = new WritableResourceStream(STDERR, $this->getEventLoop());
-            $dumping->pipe($loggerStream);
-            $loggerStream = $dumping;
-            $this->command->on('afterStop', function () use ($loggerStream) {
-                $loggerStream->end();
-            });
-            /*
-             * @todo Using internal StdioLogger constructor to write to STDERR. Replace by own logger.
-             */
-            $this->logger = (new LevelFilteringLogger(
-                (new StdioLogger($loggerStream))
-                    ->withNewLine(true)
-            ));
-            if (!$this->debug) {
-                $this->logger = $this->logger->withHideLevels([
-                    LogLevel::DEBUG,
-                ]);
-            }
-            if (!$this->verbose) {
-                $this->logger = $this->logger->withHideLevels([
-                    LogLevel::INFO,
-                ]);
-            }
+            $this->logger = new NullLogger();
         }
 
         return $this->logger;
@@ -247,7 +217,7 @@ class ServiceContainer
     {
         if (!isset($this->dnsResolver)) {
             $config = DnsConfig::loadSystemConfigBlocking();
-            $this->dnsResolver = (new \React\Dns\Resolver\Factory())->createCached(
+            $this->dnsResolver = (new ResolverFactory())->createCached(
                 $config->nameservers ? reset($config->nameservers) : self::DEFAULT_NAMESERVER,
                 $this->getEventLoop()
             );
