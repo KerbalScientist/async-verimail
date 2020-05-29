@@ -7,13 +7,13 @@
 
 namespace App\Verifier;
 
-use App\Config\HostSettings;
 use App\MutexRun\CallableOnce;
 use App\MutexRun\Factory;
 use App\MutexRun\Queue;
 use App\Smtp\ConnectionClosedException;
 use App\Smtp\ConnectionInterface as SmtpConnectionInterface;
 use App\Smtp\Message;
+use App\Verifier\Config\HostSettings;
 use Evenement\EventEmitterTrait;
 use Exception;
 use InvalidArgumentException;

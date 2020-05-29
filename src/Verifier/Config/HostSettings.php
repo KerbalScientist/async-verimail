@@ -5,7 +5,7 @@
  * Copyright (c) 2020 Balovnev Anton <an43.bal@gmail.com>
  */
 
-namespace App\Config;
+namespace App\Verifier\Config;
 
 use InvalidArgumentException;
 

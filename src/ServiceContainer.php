@@ -8,12 +8,12 @@
 namespace App;
 
 use App\Command\BaseCommand;
-use App\Config\HostsConfig;
 use App\DB\EmailEntityManager;
 use App\DB\MysqlQueryFactory;
 use App\Entity\VerifyStatus;
 use App\MutexRun\Factory as MutexFactory;
 use App\Smtp\Connector as SmtpConnector;
+use App\Verifier\Config\HostsConfig;
 use App\Verifier\ConnectionPool;
 use App\Verifier\Connector as VerifierConnector;
 use App\Verifier\Verifier;

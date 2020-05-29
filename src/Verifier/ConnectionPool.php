@@ -7,7 +7,7 @@
 
 namespace App\Verifier;
 
-use App\Config\HostsSettingsCollection;
+use App\Verifier\Config\HostsSettingsCollection;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
