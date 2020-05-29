@@ -327,8 +327,6 @@ class EmailEntityManager implements LoggerAwareInterface
      * @param string $filename
      *
      * @return PromiseInterface
-     *
-     * @todo Stream
      */
     public function importFromCsvBlocking(string $filename): PromiseInterface
     {
