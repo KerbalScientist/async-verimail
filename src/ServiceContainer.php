@@ -221,10 +221,9 @@ class ServiceContainer
         $verifierConnector = new ConnectionPool($verifierConnector, $loop, $config->getSettings());
         $verifierConnector->setLogger($logger);
 
-        $this->verifier = new Verifier($verifierConnector, new Mutex($loop), [
-            'maxConcurrent' => (int) $this->getEnvConfigValue('MAX_CONCURRENT', 1000),
-        ]);
+        $this->verifier = new Verifier($verifierConnector);
         $this->verifier->setLogger($this->getLogger());
+        $this->verifier->setMaxConcurrent((int) $this->getEnvConfigValue('MAX_CONCURRENT', 1000));
 
         return $this->verifier;
     }

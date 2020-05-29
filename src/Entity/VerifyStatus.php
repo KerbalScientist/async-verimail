@@ -87,4 +87,9 @@ class VerifyStatus
     {
         return self::getDescriptions()[$this->value];
     }
+
+    public function isUnknown(): bool
+    {
+        return self::UNKNOWN === $this->value;
+    }
 }
