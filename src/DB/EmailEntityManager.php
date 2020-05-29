@@ -168,7 +168,7 @@ class EmailEntityManager implements LoggerAwareInterface
     {
         $statusEnumValues = "'".implode("', '", VerifyStatus::all())."'";
         $sql = "
-            CREATE TABLE IF NOT EXISTS `$this->tableName` (
+            CREATE TABLE `$this->tableName` (
                 i_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 m_mail VARCHAR(255) NOT NULL,
                 s_status ENUM($statusEnumValues),
