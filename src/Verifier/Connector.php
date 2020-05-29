@@ -8,7 +8,7 @@
 namespace App\Verifier;
 
 use App\Config\HostsSettingsCollection;
-use App\Mutex;
+use App\MutexRun\Factory;
 use App\Smtp\ConnectionInterface as SmtpConnectionInterface;
 use App\Smtp\ConnectorInterface as SmtpConnectorInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -21,19 +21,19 @@ class Connector implements LoggerAwareInterface, ConnectorInterface
     use LoggerAwareTrait;
 
     private SmtpConnectorInterface $connector;
-    private Mutex $mutex;
+    private Factory $mutex;
     private HostsSettingsCollection $settings;
 
     /**
      * Connector constructor.
      *
      * @param SmtpConnectorInterface  $connector
-     * @param Mutex                   $mutex
+     * @param Factory                 $mutex
      * @param HostsSettingsCollection $settings
      */
     public function __construct(
         SmtpConnectorInterface $connector,
-        Mutex $mutex,
+        Factory $mutex,
         HostsSettingsCollection $settings
     ) {
         $this->connector = $connector;

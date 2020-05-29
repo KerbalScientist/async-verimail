@@ -12,9 +12,10 @@ use App\Config\HostsConfig;
 use App\DB\EmailEntityManager;
 use App\DB\MysqlQueryFactory;
 use App\Entity\VerifyStatus;
-use App\Verifier\ConnectionPool;
+use App\MutexRun\Factory as MutexFactory;
 use App\Smtp\Connector as SmtpConnector;
 use App\Stream\ThroughStream;
+use App\Verifier\ConnectionPool;
 use App\Verifier\Connector as VerifierConnector;
 use App\Verifier\Verifier;
 use Aura\SqlQuery\Common\SelectInterface;
@@ -28,7 +29,7 @@ use React\Dns\Config\Config as DnsConfig;
 use React\Dns\Resolver\ResolverInterface;
 use React\EventLoop\LoopInterface;
 use React\MySQL\ConnectionInterface;
-use React\MySQL\Factory;
+use React\MySQL\Factory as MysqlFactory;
 use React\Socket\Connector as SocketConnector;
 use React\Socket\ConnectorInterface;
 use React\Stream\WritableResourceStream;
@@ -120,7 +121,7 @@ class ServiceContainer
         $url .= '?idle=-1&timeout=-1';
 
         return new BindAssocParamsConnectionDecorator(
-            (new Factory($this->getEventLoop()))->createLazyConnection($url)
+            (new MysqlFactory($this->getEventLoop()))->createLazyConnection($url)
         );
     }
 
@@ -208,7 +209,7 @@ class ServiceContainer
         $connector = $this->getSocketConnector();
         $loop = $this->getEventLoop();
         $logger = $this->getLogger();
-        $mutex = new Mutex($loop);
+        $mutex = new MutexFactory($loop);
         $settings = $config->getSettings();
         $verifierConnector = new SmtpConnector(
             $resolver,

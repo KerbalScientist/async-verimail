@@ -7,7 +7,7 @@
 
 namespace App\Smtp;
 
-use App\Mutex;
+use App\MutexRun\Factory;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
@@ -29,19 +29,19 @@ class Connector implements LoggerAwareInterface, ConnectorInterface
     private const MX_PORT = 25;
     private ResolverInterface $resolver;
     private SocketConnectorInterface $connector;
-    private Mutex $mutex;
+    private Factory $mutex;
 
     /**
      * Connector constructor.
      *
      * @param ResolverInterface        $resolver
      * @param SocketConnectorInterface $connector
-     * @param Mutex                    $mutex
+     * @param \App\MutexRun\Factory    $mutex
      */
     public function __construct(
         ResolverInterface $resolver,
         SocketConnectorInterface $connector,
-        Mutex $mutex
+        Factory $mutex
     ) {
         $this->resolver = $resolver;
         $this->connector = $connector;
@@ -58,7 +58,7 @@ class Connector implements LoggerAwareInterface, ConnectorInterface
             ->then(function (SocketConnectionInterface $socketConnection) use ($hostname) {
                 $this->logger->debug("$hostname MX - connected to host".
                     " {$socketConnection->getRemoteAddress()} from {$socketConnection->getLocalAddress()}.");
-                $connection = new Connection($socketConnection, $this->mutex);
+                $connection = new Connection($socketConnection, $this->mutex->createQueue());
                 $connection->setLogger($this->logger);
 
                 return $connection;

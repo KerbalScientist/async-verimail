@@ -7,7 +7,7 @@
 
 namespace App\Smtp;
 
-use App\Mutex;
+use App\MutexRun\Queue;
 use App\Smtp\ConnectionInterface as VerifierConnectionInterface;
 use Evenement\EventEmitterTrait;
 use Exception;
@@ -31,7 +31,6 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
     const MULTILINE_REPLY_MARKER = '-';
 
     private ConnectionInterface $connection;
-    private Mutex $mutex;
     private bool $eventListenersSet = false;
 
     private ?Deferred $replyDeferred = null;
@@ -42,18 +41,19 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
     private string $localAddress;
     private PromiseInterface $openingMessage;
     private ?Deferred $drainDeferred = null;
+    private Queue $queue;
 
     /**
      * SmtpVerifierConnection constructor.
      *
      * @param ConnectionInterface $connection
-     * @param Mutex               $mutex
+     * @param Queue               $queue
      */
-    public function __construct(ConnectionInterface $connection, Mutex $mutex)
+    public function __construct(ConnectionInterface $connection, Queue $queue)
     {
         $this->connection = $connection;
-        $this->mutex = $mutex;
         $this->logger = new NullLogger();
+        $this->queue = $queue;
         $this->remoteAddress = $this->connection->getRemoteAddress();
         $this->localAddress = $this->connection->getLocalAddress();
         $this->openingMessage = $this->receiveReply();
@@ -75,7 +75,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
      */
     public function sendCommand(string $name, string $data = ''): PromiseInterface
     {
-        return $this->mutex->enqueue($this, function () use ($name, $data) {
+        return $this->queue->enqueue(function () use ($name, $data) {
             if ($this->closedException) {
                 return reject($this->closedException);
             }
@@ -144,7 +144,7 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
                 });
         };
         if ($enqueue) {
-            return $this->mutex->enqueue($this, $callback);
+            return $this->queue->enqueue($callback);
         }
 
         return resolve($callback());

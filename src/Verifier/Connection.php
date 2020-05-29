@@ -8,7 +8,9 @@
 namespace App\Verifier;
 
 use App\Config\HostSettings;
-use App\Mutex;
+use App\MutexRun\CallableOnce;
+use App\MutexRun\Factory;
+use App\MutexRun\Queue;
 use App\Smtp\ConnectionClosedException;
 use App\Smtp\ConnectionInterface as SmtpConnectionInterface;
 use App\Smtp\Message;
@@ -31,7 +33,7 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
     use EventEmitterTrait;
 
     private SmtpConnectionInterface $connection;
-    private Mutex $mutex;
+    private Factory $mutex;
     private string $fromEmail;
     private bool $initialized = false;
     private bool $eventListenersSet = false;
@@ -50,24 +52,27 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
     private ?Exception $closedException = null;
     private string $remoteAddress;
     private string $localAddress;
+    private Queue $verifyQueue;
+    private CallableOnce $isReliableCallback;
 
     /**
      * SmtpVerifierConnection constructor.
      *
      * @param SmtpConnectionInterface $connection
-     * @param Mutex                   $mutex
+     * @param \App\MutexRun\Factory   $mutex
      * @param string                  $hostname
      * @param HostSettings|null       $settings
      */
     public function __construct(
         SmtpConnectionInterface $connection,
-        Mutex $mutex,
+        Factory $mutex,
         string $hostname,
         ?HostSettings $settings = null
     ) {
         $this->connection = $connection;
         Util::forwardEvents($connection, $this, ['active', 'error', 'close', 'message']);
         $this->mutex = $mutex;
+        $this->verifyQueue = $mutex->createQueue();
         $this->hostname = $hostname;
         $this->logger = new NullLogger();
         if (!$settings) {
@@ -97,18 +102,14 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
      */
     public function isReliable(): PromiseInterface
     {
-        return $this->mutex->runOnce([$this, __FUNCTION__], function () {
-            if (isset($this->reliable)) {
-                return resolve($this->reliable);
-            }
+        if (!isset($this->isReliableCallback)) {
+            $this->isReliableCallback = $this->mutex->createCallableOnce(function () {
+                return $this->sendVerifyRecipient("$this->randomUser@$this->hostname")
+                    ->then(fn (Message $message) => Message::RCODE_OK !== $message->rcode);
+            });
+        }
 
-            return $this->sendVerifyRecipient("$this->randomUser@$this->hostname")
-                ->then(function (Message $message) {
-                    $this->reliable = Message::RCODE_OK !== $message->rcode;
-
-                    return $this->reliable;
-                });
-        });
+        return ($this->isReliableCallback)();
     }
 
     /**
@@ -123,7 +124,7 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
         if ($this->closedException) {
             return reject($this->closedException);
         }
-        $result = $this->mutex->enqueue([$this, __FUNCTION__], function () use ($email) {
+        $result = $this->verifyQueue->enqueue(function () use ($email) {
             if ($this->closedException) {
                 return reject($this->closedException);
             }
