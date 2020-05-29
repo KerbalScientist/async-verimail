@@ -316,9 +316,4 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
                 $this->validateReply($result, Message::RCODE_OK);
             });
     }
-
-    public function __destruct()
-    {
-        $this->close();
-    }
 }

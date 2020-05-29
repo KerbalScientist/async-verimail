@@ -283,7 +283,6 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
 
     public function __destruct()
     {
-        $this->flush();
         $this->close();
     }
 }

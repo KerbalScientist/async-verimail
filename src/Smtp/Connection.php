@@ -222,9 +222,4 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
         $this->emit('close');
         $this->removeAllListeners();
     }
-
-    public function __destruct()
-    {
-        $this->close();
-    }
 }
