@@ -7,7 +7,7 @@
 
 namespace App\DB;
 
-use App\Entity\VerifyStatus;
+use App\Verifier\VerifyStatus;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;

@@ -8,8 +8,8 @@
 namespace App\DB;
 
 use App\Entity\Email;
-use App\Entity\VerifyStatus;
 use App\Stream\ThroughStream;
+use App\Verifier\VerifyStatus;
 use Aura\SqlQuery\Common\SelectInterface;
 use Aura\SqlQuery\QueryInterface;
 use Exception;
@@ -241,7 +241,7 @@ class EmailEntityManager implements LoggerAwareInterface
     }
 
     /**
-     * @param VerifyStatus[] $statusList
+     * @param \App\Verifier\VerifyStatus[] $statusList
      *
      * @return ReadableStreamInterface readable stream of Email entities
      */

@@ -7,7 +7,6 @@
 
 namespace App\Verifier;
 
-use App\Entity\VerifyStatus;
 use App\Smtp\ConnectionClosedException;
 use App\Smtp\Message;
 use App\Smtp\NoMxRecordsException;
