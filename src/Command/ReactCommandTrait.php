@@ -44,6 +44,10 @@ trait ReactCommandTrait
     private array $resolveBeforeStop = [];
     private bool $stopped = false;
     private LoopInterface $eventLoop;
+    /**
+     * @var mixed
+     */
+    private $error;
 
     public function initReactCommand(LoopInterface $loop): void
     {
@@ -103,8 +107,8 @@ trait ReactCommandTrait
             ->then(function ($code) use (&$statusCode) {
                 $statusCode = $code;
                 $this->stop();
-            }, function ($e) use (&$error) {
-                $error = $e;
+            }, function ($error) {
+                $this->error = $error;
                 $this->stop();
             });
         $this->eventLoop
@@ -117,13 +121,13 @@ trait ReactCommandTrait
             });
         $this->eventLoop->run();
         $this->emit('stop');
-        if ($error instanceof Exception) {
-            throw $error;
+        if ($this->error instanceof Exception) {
+            throw $this->error;
         }
-        if ($error instanceof Throwable) {
-            throw new RuntimeException('Error while running command.', 0, $error);
+        if ($this->error instanceof Throwable) {
+            throw new RuntimeException('Error while running command.', 0, $this->error);
         }
-        if (null !== $error) {
+        if (null !== $this->error) {
             throw new LogicException('Execute promise rejected with non-throwable error '.
                 var_export($error, true));
         }
@@ -131,10 +135,10 @@ trait ReactCommandTrait
         return is_numeric($statusCode) ? (int) $statusCode : 0;
     }
 
-    private function stop(bool $force = false): void
+    private function stop(bool $force = false): PromiseInterface
     {
         if ($this->stopped) {
-            return;
+            return resolve();
         }
         $this->stopped = true;
         $this->emit('beforeStop');
@@ -143,11 +147,12 @@ trait ReactCommandTrait
         } else {
             $promise = all($this->resolveBeforeStop);
         }
-        $stop = function () {
-            $this->eventLoop->addTimer(1, function () {
-                $this->eventLoop->stop();
-            });
-        };
-        $promise->then($stop, $stop);
+
+        return $promise->then([$this->eventLoop, 'stop'], function (Throwable $error) {
+            if (is_null($this->error)) {
+                $this->error = $error;
+            }
+            $this->eventLoop->stop();
+        });
     }
 }
