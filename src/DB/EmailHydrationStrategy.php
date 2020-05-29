@@ -83,9 +83,6 @@ class EmailHydrationStrategy implements HydrationStrategyInterface
 
                 continue;
             }
-            /*
-             * @todo Hardcoded.
-             */
             if (is_a($type->getName(), DateTimeInterface::class, true)) {
                 $object->{$property->name} = new DateTimeImmutable($row[$property->name]);
 
@@ -120,9 +117,6 @@ class EmailHydrationStrategy implements HydrationStrategyInterface
 
                 continue;
             }
-            /*
-             * @todo Hardcoded.
-             */
             if ($value instanceof VerifyStatus) {
                 $result[$property->name] = (string) $value;
             }

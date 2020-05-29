@@ -44,8 +44,6 @@ class VerifyCommand extends BaseCommand
      * @return int|void
      *
      * @throws \Exception
-     *
-     * @todo Too long. Refactor.
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {

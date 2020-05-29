@@ -41,11 +41,7 @@ abstract class BaseCommand extends Command
 
     protected function configure(): void
     {
-        $this
-            /*
-             * @todo Filter option is needed not for all commands.
-             */
-            ->addOption('filter', 'f', InputArgument::OPTIONAL,
+        $this->addOption('filter', 'f', InputArgument::OPTIONAL,
                 'JSON email filter');
     }
 

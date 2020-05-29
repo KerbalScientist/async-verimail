@@ -279,8 +279,6 @@ class ServiceContainer
 
     /**
      * @param bool $debug
-     *
-     * @todo Implement.
      */
     public function setDebug(bool $debug): void
     {
