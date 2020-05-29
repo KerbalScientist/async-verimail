@@ -14,6 +14,7 @@ use LogicException;
 use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 use function React\Promise\all;
@@ -106,8 +107,11 @@ trait ReactCommandTrait
                 $this->stop();
             });
         $this->eventLoop
-            ->addSignal(SIGINT, function () {
-                echo 'Stopped by user.'.PHP_EOL;
+            ->addSignal(SIGINT, function () use ($output) {
+                if ($output instanceof ConsoleOutputInterface) {
+                    $output = $output->section();
+                }
+                $output->writeln('Stopped by user.');
                 $this->stop();
             });
         $this->eventLoop->run();
