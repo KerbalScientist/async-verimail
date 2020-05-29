@@ -42,6 +42,7 @@ trait ReactCommandTrait
      * @var PromiseInterface[]
      */
     private array $resolveBeforeStop = [];
+    private bool $stopped = false;
     private LoopInterface $eventLoop;
 
     public function initReactCommand(LoopInterface $loop): void
@@ -132,6 +133,10 @@ trait ReactCommandTrait
 
     private function stop(bool $force = false): void
     {
+        if ($this->stopped) {
+            return;
+        }
+        $this->stopped = true;
         $this->emit('beforeStop');
         if ($force || !$this->resolveBeforeStop) {
             $promise = resolve();
