@@ -70,9 +70,6 @@ class ConnectionPool implements LoggerAwareInterface, ConnectorInterface
 
             return $this->getConnection($hostname);
         }
-        /*
-         * @todo Round-robin instead of random.
-         */
         $this->logger->debug("Connection - reuse busy for $hostname.");
 
         return $this->connectionPool[$hostname][array_rand($this->connectionPool[$hostname])];

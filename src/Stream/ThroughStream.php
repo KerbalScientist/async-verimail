@@ -24,8 +24,6 @@ use function is_callable;
  *
  * This allows to emit `data` event from any readable stream, piped to
  * `ThroughStream` without pausing readable stream while `data` event is emitted.
- *
- * @todo Duplicated code with BufferedThroughStreamTrait
  */
 final class ThroughStream extends EventEmitter implements DuplexStreamInterface
 {
