@@ -22,7 +22,14 @@ use function React\Promise\all;
 
 class VerifyCommand extends BaseCommand
 {
+    private const MOVING_AVG_SPEED_WINDOW_WIDTH = 15;
+    private const SPEED_SHOW_DECIMALS = 2;
+
     protected static $defaultName = 'verify';
+
+    private MovingAverage $movingAvg;
+    private float $timeStart;
+    private int $verifiedCount;
 
     protected function configure(): void
     {
@@ -106,13 +113,8 @@ class VerifyCommand extends BaseCommand
         ReadableStreamInterface $queryStream,
         DuplexStreamInterface $verifyingStream
     ): void {
-        $count = 0;
-        $timeStart = microtime(true);
-        $timeLast = microtime(true);
-        /**
-         * @todo Hardcoded windowWidth.
-         */
-        $movingAvg = new MovingAverage(15);
+        $this->verifiedCount = 0;
+        $this->timeStart = microtime(true);
         $queryStream->once('data', function () use (&$timeStart, &$timeLast) {
             $timeLast = $timeStart = microtime(true);
         });
@@ -122,32 +124,44 @@ class VerifyCommand extends BaseCommand
         $progress->setEmptyBarCharacter('░');
         $section = $output->section();
         $verifyingStream->on('resolve',
-            function () use (&$count, $timeStart, &$timeLast, $movingAvg, $section, $progress) {
-                ++$count;
-                if ($count === $progress->getMaxSteps()) {
+            function () use ($section, $progress) {
+                ++$this->verifiedCount;
+                if ($this->verifiedCount === $progress->getMaxSteps()) {
                     $progress->finish();
                 } else {
                     $progress->advance();
                 }
-                if (!$section->isVerbose()) {
-                    return;
+                if ($section->isVerbose()) {
+                    $time = microtime(true);
+                    $section->clear();
+                    $this->printAvgSpeed($section, $time);
                 }
-                $time = microtime(true);
-                $avgSpeed = $count / ($time - $timeStart);
-                $section->clear();
-                $avgSpeed = number_format($avgSpeed, 2);
-                $section->writeln("Average speed: $avgSpeed emails per second.");
-                if (!$section->isVeryVerbose()) {
-                    return;
-                }
-                $movingAvg->insertValue($time, $time - $timeLast);
-                $timeLast = $time;
-                if (0 !== $movingAvg->get()) {
-                    $movingAvgSpeed = 1 / $movingAvg->get();
-                    $movingAvgSpeed = number_format($movingAvgSpeed, 2);
-                    $section->writeln("Current speed: $movingAvgSpeed emails per second.",
-                        OutputInterface::VERBOSITY_VERY_VERBOSE);
+                if ($section->isVeryVerbose()) {
+                    $this->printCurrentSpeed($section, $time ?? microtime(true));
                 }
             });
+    }
+
+    private function printAvgSpeed(OutputInterface $output, float $time): void
+    {
+        $avgSpeed = $this->verifiedCount / ($time - $this->timeStart);
+        $avgSpeed = number_format($avgSpeed, self::SPEED_SHOW_DECIMALS);
+        $output->writeln("Average speed: $avgSpeed emails per second.",
+            OutputInterface::VERBOSITY_VERBOSE);
+    }
+
+    private function printCurrentSpeed(OutputInterface $output, float $time): void
+    {
+        if (!isset($this->movingAvg)) {
+            $this->movingAvg = new MovingAverage(self::MOVING_AVG_SPEED_WINDOW_WIDTH);
+        }
+        $this->movingAvg->insertValue($time, $time - ($this->movingAvg->getWindowEnd() ?? $this->timeStart));
+        if (0 == $this->movingAvg->get()) {
+            return;
+        }
+        $movingAvgSpeed = 1 / $this->movingAvg->get();
+        $movingAvgSpeed = number_format($movingAvgSpeed, self::SPEED_SHOW_DECIMALS);
+        $output->writeln("Current speed: $movingAvgSpeed emails per second.",
+            OutputInterface::VERBOSITY_VERY_VERBOSE);
     }
 }

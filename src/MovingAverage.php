@@ -8,6 +8,7 @@
 
 namespace App;
 
+use LogicException;
 use SplPriorityQueue;
 
 class MovingAverage
@@ -51,6 +52,10 @@ class MovingAverage
      */
     public function get(): float
     {
+        if (!isset($this->buffer)) {
+            throw new LogicException('get() must not be called before insert().');
+        }
+
         return $this->sum / $this->buffer->count();
     }
 
@@ -62,5 +67,23 @@ class MovingAverage
     public function getCount(): int
     {
         return $this->buffer->count();
+    }
+
+    public function getWindowStart(): ?float
+    {
+        if (!isset($this->buffer)) {
+            return null;
+        }
+
+        return $this->maxX - $this->windowWidth;
+    }
+
+    public function getWindowEnd(): ?float
+    {
+        if (!isset($this->buffer)) {
+            return null;
+        }
+
+        return $this->maxX;
     }
 }
