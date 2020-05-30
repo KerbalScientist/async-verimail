@@ -31,9 +31,6 @@ class Application extends \Symfony\Component\Console\Application
         }
     }
 
-    /**
-     * @param ServiceContainer $container
-     */
     public function setContainer(ServiceContainer $container): void
     {
         $this->container = $container;

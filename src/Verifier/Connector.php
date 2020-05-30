@@ -24,13 +24,6 @@ class Connector implements LoggerAwareInterface, ConnectorInterface
     private Factory $mutex;
     private HostsSettingsCollection $settings;
 
-    /**
-     * Connector constructor.
-     *
-     * @param SmtpConnectorInterface  $connector
-     * @param Factory                 $mutex
-     * @param HostsSettingsCollection $settings
-     */
     public function __construct(
         SmtpConnectorInterface $connector,
         Factory $mutex,

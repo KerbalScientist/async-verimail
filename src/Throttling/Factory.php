@@ -15,11 +15,6 @@ class Factory
 {
     private LoopInterface $eventLoop;
 
-    /**
-     * Factory constructor.
-     *
-     * @param LoopInterface $eventLoop
-     */
     public function __construct(LoopInterface $eventLoop)
     {
         $this->eventLoop = $eventLoop;

@@ -35,11 +35,6 @@ class VerifyStatus
 
     private string $value;
 
-    /**
-     * EmailVerifyStatus constructor.
-     *
-     * @param string $value
-     */
     public function __construct(string $value = self::UNKNOWN)
     {
         if (!isset(self::getDescriptions()[$value])) {

@@ -22,12 +22,6 @@ class CallableOnce
 
     private ?PromiseInterface $lock = null;
 
-    /**
-     * CallableOnce constructor.
-     *
-     * @param callable $callable
-     * @param bool     $allowAfterResolve
-     */
     public function __construct(callable $callable, bool $allowAfterResolve = false)
     {
         $this->callable = $callable;

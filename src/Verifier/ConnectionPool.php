@@ -34,13 +34,6 @@ class ConnectionPool implements LoggerAwareInterface, ConnectorInterface
     private LoopInterface $eventLoop;
     private HostsSettingsCollection $settings;
 
-    /**
-     * ConnectionPool constructor.
-     *
-     * @param ConnectorInterface      $connector
-     * @param LoopInterface           $eventLoop
-     * @param HostsSettingsCollection $settings
-     */
     public function __construct(ConnectorInterface $connector, LoopInterface $eventLoop, HostsSettingsCollection $settings)
     {
         $this->connector = $connector;

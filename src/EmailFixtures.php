@@ -42,12 +42,6 @@ class EmailFixtures
     private EmailPersistingStream $persistingStream;
     private LoopInterface $loop;
 
-    /**
-     * EmailFixtures constructor.
-     *
-     * @param EmailEntityManager $entityManager
-     * @param LoopInterface      $loop
-     */
     public function __construct(EmailEntityManager $entityManager, LoopInterface $loop)
     {
         $this->persistingStream = $entityManager->createPersistingStream();

@@ -31,13 +31,6 @@ class Connector implements LoggerAwareInterface, ConnectorInterface
     private SocketConnectorInterface $connector;
     private Factory $mutex;
 
-    /**
-     * Connector constructor.
-     *
-     * @param ResolverInterface        $resolver
-     * @param SocketConnectorInterface $connector
-     * @param \App\MutexRun\Factory    $mutex
-     */
     public function __construct(
         ResolverInterface $resolver,
         SocketConnectorInterface $connector,

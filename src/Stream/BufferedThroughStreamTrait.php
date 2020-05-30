@@ -28,11 +28,6 @@ trait BufferedThroughStreamTrait
     private array $buffer = [];
     private LoopInterface $eventLoop;
 
-    /**
-     * BufferedThroughStreamTrait constructor.
-     *
-     * @param LoopInterface $eventLoop
-     */
     public function __construct(LoopInterface $eventLoop)
     {
         $this->eventLoop = $eventLoop;

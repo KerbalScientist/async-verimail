@@ -21,9 +21,6 @@ class Email
 
     public DateTimeInterface $dt_updated;
 
-    /**
-     * Email constructor.
-     */
     public function __construct()
     {
         $this->s_status = new VerifyStatus();

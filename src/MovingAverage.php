@@ -18,11 +18,6 @@ class MovingAverage
     private float $maxX = PHP_FLOAT_MIN;
     private float $windowWidth;
 
-    /**
-     * MovingAverage constructor.
-     *
-     * @param float $windowWidth
-     */
     public function __construct(float $windowWidth)
     {
         $this->windowWidth = $windowWidth;

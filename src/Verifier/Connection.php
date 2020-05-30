@@ -55,14 +55,6 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
     private Queue $verifyQueue;
     private CallableOnce $isReliableCallback;
 
-    /**
-     * SmtpVerifierConnection constructor.
-     *
-     * @param SmtpConnectionInterface $connection
-     * @param \App\MutexRun\Factory   $mutex
-     * @param string                  $hostname
-     * @param HostSettings|null       $settings
-     */
     public function __construct(
         SmtpConnectionInterface $connection,
         Factory $mutex,
@@ -208,9 +200,6 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
         $this->removeAllListeners();
     }
 
-    /**
-     * @return PromiseInterface
-     */
     private function init(): PromiseInterface
     {
         if ($this->closedException) {
@@ -260,9 +249,6 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
         return $message;
     }
 
-    /**
-     * @param Message $message
-     */
     public function throwSenderStatusException(Message $message): void
     {
         if (Message::STATE_OK !== $message->connectionState) {

@@ -29,12 +29,6 @@ class Queue
 
     private bool $paused = true;
 
-    /**
-     * Queue constructor.
-     *
-     * @param LoopInterface $eventLoop
-     * @param int           $maxConcurrent
-     */
     public function __construct(LoopInterface $eventLoop, int $maxConcurrent = 1)
     {
         if ($maxConcurrent < 1) {

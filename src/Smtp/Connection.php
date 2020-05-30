@@ -43,12 +43,6 @@ class Connection implements LoggerAwareInterface, VerifierConnectionInterface
     private ?Deferred $drainDeferred = null;
     private Queue $queue;
 
-    /**
-     * SmtpVerifierConnection constructor.
-     *
-     * @param ConnectionInterface $connection
-     * @param Queue               $queue
-     */
     public function __construct(ConnectionInterface $connection, Queue $queue)
     {
         $this->connection = $connection;

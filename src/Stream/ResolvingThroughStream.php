@@ -26,12 +26,6 @@ class ResolvingThroughStream extends EventEmitter implements DuplexStreamInterfa
     private array $promiseBuffer = [];
     private int $softBufferSize;
 
-    /**
-     * ResolvingThroughStream constructor.
-     *
-     * @param LoopInterface $eventLoop
-     * @param int           $softBufferSize
-     */
     public function __construct(LoopInterface $eventLoop, int $softBufferSize)
     {
         $this->softBufferSize = $softBufferSize;

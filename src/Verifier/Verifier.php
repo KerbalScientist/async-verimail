@@ -39,11 +39,6 @@ class Verifier implements LoggerAwareInterface
      */
     private array $handledExceptions;
 
-    /**
-     * Verifier constructor.
-     *
-     * @param ConnectorInterface $verifierConnector
-     */
     public function __construct(ConnectorInterface $verifierConnector)
     {
         $this->verifierConnector = $verifierConnector;
@@ -87,16 +82,13 @@ class Verifier implements LoggerAwareInterface
         ];
     }
 
-    /**
-     * @param int $maxConcurrent
-     */
     public function setMaxConcurrent(int $maxConcurrent): void
     {
         $this->maxConcurrent = $maxConcurrent;
     }
 
     /**
-     * Creates stream, that verifies, sets `Email::$s_status` property and passes `Email` entities through.
+     * Creates stream that verifies email, sets `Email::$s_status` property and passes `Email` entities through.
      *
      * @param LoopInterface $loop
      * @param mixed[]       $pipeOptions Options, passed to `App::pipeThrough()`

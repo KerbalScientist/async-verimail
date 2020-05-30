@@ -20,13 +20,6 @@ class ClosureWrapper
     private float $minIntervalSeconds;
     private float $nextCallTime = 0;
 
-    /**
-     * ThrottlingWrapper constructor.
-     *
-     * @param Closure       $closure
-     * @param LoopInterface $eventLoop
-     * @param float         $minIntervalSeconds
-     */
     public function __construct(Closure $closure, LoopInterface $eventLoop, float $minIntervalSeconds)
     {
         $this->closure = $closure;

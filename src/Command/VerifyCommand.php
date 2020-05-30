@@ -48,7 +48,7 @@ class VerifyCommand extends BaseCommand
      * @param InputInterface  $input
      * @param OutputInterface $output
      *
-     * @return int|void
+     * @return int
      *
      * @throws \Exception
      */
@@ -101,12 +101,6 @@ class VerifyCommand extends BaseCommand
         return 0;
     }
 
-    /**
-     * @param int                     $totalCount
-     * @param ConsoleOutputInterface  $output
-     * @param ReadableStreamInterface $queryStream
-     * @param DuplexStreamInterface   $verifyingStream
-     */
     private function showStats(
         int $totalCount,
         ConsoleOutputInterface $output,

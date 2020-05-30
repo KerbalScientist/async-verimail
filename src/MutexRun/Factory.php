@@ -13,11 +13,6 @@ class Factory
 {
     private LoopInterface $eventLoop;
 
-    /**
-     * Mutex constructor.
-     *
-     * @param LoopInterface $eventLoop
-     */
     public function __construct(LoopInterface $eventLoop)
     {
         $this->eventLoop = $eventLoop;

@@ -18,11 +18,6 @@ trait ReadableStreamWrapperTrait
 
     protected ReadableStreamInterface $innerStream;
 
-    /**
-     * HydratingStream constructor.
-     *
-     * @param ReadableStreamInterface $innerStream
-     */
     public function __construct(ReadableStreamInterface $innerStream)
     {
         $this->initWrapper($innerStream);

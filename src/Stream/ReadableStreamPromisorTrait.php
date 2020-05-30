@@ -26,10 +26,6 @@ trait ReadableStreamPromisorTrait
     private int $bufferSoftSize;
 
     /**
-     * PromisorReadableStreamTrait constructor.
-     *
-     * @param int  $bufferSize
-     * @param bool $singleDataArg
      * @noinspection PhpUnused
      */
     public function __construct(int $bufferSize, $singleDataArg = false)

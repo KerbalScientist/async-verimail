@@ -140,9 +140,6 @@ class ServiceContainer
         return $this->logger;
     }
 
-    /**
-     * @return EmailEntityManager
-     */
     public function getEntityManager(): EmailEntityManager
     {
         if (!isset($this->entityManager)) {
@@ -236,17 +233,11 @@ class ServiceContainer
         return $_SERVER[$name] ?? $default;
     }
 
-    /**
-     * @param BaseCommand $command
-     */
     public function setCommand(BaseCommand $command): void
     {
         $this->command = $command;
     }
 
-    /**
-     * @param string $hostsConfigFile
-     */
     public function setHostsConfigFile(string $hostsConfigFile): void
     {
         if (isset($this->hostsConfig)) {
@@ -255,49 +246,31 @@ class ServiceContainer
         $this->hostsConfigFile = $hostsConfigFile;
     }
 
-    /**
-     * @param LoggerInterface $logger
-     */
     public function setLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }
 
-    /**
-     * @param LoopInterface $eventLoop
-     */
     public function setEventLoop(LoopInterface $eventLoop): void
     {
         $this->eventLoop = $eventLoop;
     }
 
-    /**
-     * @param string|null $proxy
-     */
     public function setProxy(?string $proxy): void
     {
         $this->proxy = $proxy;
     }
 
-    /**
-     * @param HostsConfig $hostsConfig
-     */
     public function setHostsConfig(HostsConfig $hostsConfig): void
     {
         $this->hostsConfig = $hostsConfig;
     }
 
-    /**
-     * @param ConnectionInterface $readDbConnection
-     */
     public function setReadDbConnection(ConnectionInterface $readDbConnection): void
     {
         $this->readDbConnection = $readDbConnection;
     }
 
-    /**
-     * @param ConnectionInterface $writeConnection
-     */
     public function setWriteConnection(ConnectionInterface $writeConnection): void
     {
         $this->writeConnection = $writeConnection;
