@@ -51,7 +51,13 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
      *
      * @param ConnectionInterface $connection
      * @param MysqlQueryFactory   $queryFactory
-     * @param mixed[]             $settings
+     * @param mixed[]             $settings     = [
+     *                                          'tableName' => 'email',
+     *                                          'insertBufferSize' => 500,
+     *                                          'updateBufferSize' => 500,
+     *                                          'insertIgnore' => false,
+     *                                          'hydrationStrategy' => new EmailHydrationStrategy(new ReflectionClass(Email::class)),
+     *                                          ]
      */
     public function __construct(
         ConnectionInterface $connection,
@@ -72,7 +78,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
         $this->insertBufferSize = $settings['insertBufferSize'] ?? 500;
         $this->updateBufferSize = $settings['updateBufferSize'] ?? 500;
         $this->insertIgnore = $settings['insertIgnore'] ?? true;
-        $this->tableName = $settings['tableName'] ?? 'emails';
+        $this->tableName = $settings['tableName'] ?? 'email';
         $this->hydrationStrategy = $settings['hydrationStrategy']
             ?? new EmailHydrationStrategy(new ReflectionClass(Email::class));
     }
