@@ -102,7 +102,7 @@ trait ReactCommandTrait
             return $result;
         }
         $error = null;
-        $statusCode = 0;
+        $statusCode = ExitCode::ERROR;
         $this->executePromise
             ->then(function ($code) use (&$statusCode) {
                 $statusCode = $code;
@@ -132,7 +132,7 @@ trait ReactCommandTrait
                 var_export($error, true));
         }
 
-        return is_numeric($statusCode) ? (int) $statusCode : 0;
+        return is_numeric($statusCode) ? (int) $statusCode : ExitCode::SUCCESS;
     }
 
     private function stop(bool $force = false): PromiseInterface

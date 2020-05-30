@@ -45,6 +45,6 @@ class ExportCommand extends BaseCommand
                 })
         );
 
-        return 0;
+        return ExitCode::SUCCESS;
     }
 }

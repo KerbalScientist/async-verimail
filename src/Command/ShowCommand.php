@@ -70,6 +70,6 @@ class ShowCommand extends BaseCommand
 
         $this->setExecutePromise($deferred->promise());
 
-        return 0;
+        return ExitCode::SUCCESS;
     }
 }
