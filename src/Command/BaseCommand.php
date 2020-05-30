@@ -54,14 +54,6 @@ abstract class BaseCommand extends Command
         }
         $this->container->setLogger($logger);
         $this->setContainerOptions($input);
-        $verbosity = $output->getVerbosity();
-        if (OutputInterface::VERBOSITY_DEBUG === $verbosity) {
-            $this->container->setDebug(true);
-        } elseif ($verbosity >= OutputInterface::VERBOSITY_VERBOSE) {
-            $this->container->setVerbose(true);
-        } elseif (OutputInterface::VERBOSITY_QUIET === $verbosity) {
-            $this->container->setQuiet(true);
-        }
     }
 
     protected function getContainerOptionsMap(): array

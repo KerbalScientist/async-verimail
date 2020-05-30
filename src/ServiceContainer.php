@@ -39,12 +39,6 @@ class ServiceContainer
 {
     const DEFAULT_NAMESERVER = '8.8.8.8';
 
-    private bool $verbose = false;
-    private bool $quiet = false;
-    /**
-     * @var bool
-     */
-    private bool $debug = false;
     private LoggerInterface $logger;
     private LoopInterface $eventLoop;
     private EmailEntityManager $entityManager;
@@ -259,31 +253,6 @@ class ServiceContainer
             throw new LogicException('Config file is already loaded.');
         }
         $this->hostsConfigFile = $hostsConfigFile;
-    }
-
-    /**
-     * @param bool $verbose
-     */
-    public function setVerbose(bool $verbose): void
-    {
-        $this->verbose = $verbose;
-    }
-
-    /**
-     * @param bool $quiet
-     */
-    public function setQuiet(bool $quiet): void
-    {
-        $this->quiet = $quiet;
-    }
-
-    /**
-     * @param bool $debug
-     */
-    public function setDebug(bool $debug): void
-    {
-        $this->debug = $debug;
-        $this->verbose = $debug;
     }
 
     /**
