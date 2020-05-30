@@ -89,46 +89,4 @@ class HostsConfig implements ConfigurationInterface
             $objects
         );
     }
-
-    /**
-     * @param mixed[] $config
-     * @param string  $key
-     *
-     * @return mixed[]
-     */
-    private function configFilterKeyExists(array $config, string $key): array
-    {
-        return array_filter($config, function ($item) use ($key) {
-            return is_array($item) && array_key_exists($key, $item);
-        });
-    }
-
-    /**
-     * @param mixed[] $config
-     * @param string  $key
-     * @param mixed   $value
-     *
-     * @return mixed[]
-     */
-    private function configFilterValueEquals(array $config, string $key, $value): array
-    {
-        return array_filter($config, function ($item) use ($key, $value) {
-            return is_array($item) && array_key_exists($key, $item) && $item[$key] === $value;
-        });
-    }
-
-    /**
-     * @param mixed[] $array
-     * @param mixed[] $columnKeys
-     *
-     * @return mixed[]
-     */
-    private function arrayColumns(array $array, array $columnKeys): array
-    {
-        $columnKeys = array_flip($columnKeys);
-
-        return array_map(function ($item) use ($columnKeys) {
-            return array_intersect_key($item, $columnKeys);
-        }, $array);
-    }
 }
