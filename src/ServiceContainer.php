@@ -102,11 +102,11 @@ class ServiceContainer
     public function createDbConnection(): ConnectionInterface
     {
         $url = '';
-        $url .= rawurlencode(self::getEnvConfigValue('DB_USER', 'root'));
-        $url .= ':'.rawurlencode(self::getEnvConfigValue('DB_PASSWORD', ''));
-        $url .= '@'.self::getEnvConfigValue('DB_HOST', 'localhost');
-        $url .= ':'.self::getEnvConfigValue('DB_PORT', '3306');
-        $schemaName = self::getEnvConfigValue('DB_SCHEMA');
+        $url .= rawurlencode($this->getEnvConfigValue('DB_USER', 'root'));
+        $url .= ':'.rawurlencode($this->getEnvConfigValue('DB_PASSWORD', ''));
+        $url .= '@'.$this->getEnvConfigValue('DB_HOST', 'localhost');
+        $url .= ':'.$this->getEnvConfigValue('DB_PORT', '3306');
+        $schemaName = $this->getEnvConfigValue('DB_SCHEMA');
         if (!is_null($schemaName)) {
             $url .= "/$schemaName";
         }
