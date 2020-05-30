@@ -7,14 +7,14 @@ hosts:
     # Maximum number of concurrent connections.
     maxConnections:       1
 
-    # Send RSET, HELO, MAIL FROM commands after each specified count of verifications.
+    # Send RSET, HELO, MAIL FROM commands after each specified count of verifications. 0 or ~ to disable.
     resetAfterVerifications: 1
 
-    # Close and reopen SMTP connection after specified count of verifications.
+    # Close and reopen SMTP connection after specified count of verifications. 0 or ~ to disable.
     closeAfterVerifications: ~
 
-    # Not implemented. Close connection after specified amount of inactivity time in seconds.
-    inactiveTimeout:      0
+    # Close connection after specified amount of inactivity time in seconds. 0 or ~ to disable.
+    inactiveTimeout:      0.0
 
     # Non-existing user (part of email before "@") used to check if server is reliable. If server accepts non-existing email, it is unreliable.
     randomUser:           "no_such_user_iwahk1uiPoof9iCheele3eiViuCh7EipooQuoo9phai9faadoo"
