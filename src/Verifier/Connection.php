@@ -45,12 +45,9 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
     private string $fromHost;
     private string $randomUser;
     private string $hostname;
-    private bool $reliable;
     private bool $resetOnVerify = false;
     private bool $closed = false;
     private ?Exception $closedException = null;
-    private string $remoteAddress;
-    private string $localAddress;
     private Queue $verifyQueue;
     private CallableOnce $isReliableCallback;
 
@@ -74,8 +71,6 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
         $this->resetAfterVerifications = $settings->getResetAfterVerifications();
         $this->closeAfterVerifications = $settings->getCloseAfterVerifications();
         $this->randomUser = $settings->getRandomUser();
-        $this->remoteAddress = $this->connection->getRemoteAddress();
-        $this->localAddress = $this->connection->getLocalAddress();
     }
 
     /**
