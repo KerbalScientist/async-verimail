@@ -13,11 +13,6 @@ use React\Promise\PromiseInterface;
 interface ConnectionInterface extends EventEmitterInterface
 {
     /**
-     * @return bool
-     */
-    public function isBusy(): bool;
-
-    /**
      * @param string $email
      *
      * @return PromiseInterface resolves to Message

@@ -18,14 +18,6 @@ class UnreliableConnection implements ConnectionInterface
     /**
      * {@inheritdoc}
      */
-    public function isBusy(): bool
-    {
-        return false;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function sendVerifyRecipient(string $email): PromiseInterface
     {
         return resolve(true);

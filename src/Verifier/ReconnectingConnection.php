@@ -64,18 +64,6 @@ class ReconnectingConnection implements ConnectionInterface, LoggerAwareInterfac
     /**
      * {@inheritdoc}
      */
-    public function isBusy(): bool
-    {
-        if (!$this->innerConnection) {
-            return false;
-        }
-
-        return $this->innerConnection->isBusy();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function sendVerifyRecipient(string $email): PromiseInterface
     {
         return $this->callConnectionPromiseMethod('sendVerifyRecipient', $email);

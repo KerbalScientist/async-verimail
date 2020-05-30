@@ -40,7 +40,6 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
     private int $enqueuedCount = 0;
     private int $resetAfterVerifications;
     private int $closeAfterVerifications;
-    private bool $busy = false;
 
     private string $replyBuffer = '';
     private string $fromHost;
@@ -80,14 +79,6 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
     }
 
     /**
-     * @return bool
-     */
-    public function isBusy(): bool
-    {
-        return $this->busy;
-    }
-
-    /**
      * Checks if server replies ok on non-existent emails.
      *
      * @return PromiseInterface resolves to bool
@@ -120,7 +111,6 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
             if ($this->closedException) {
                 return reject($this->closedException);
             }
-            $this->busy = true;
             $promises = [];
             if ($this->closeAfterVerifications && $this->enqueuedCount >= $this->closeAfterVerifications) {
                 $promises[] = $this->sendCommand('QUIT');
@@ -143,7 +133,6 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
                     if ($this->closedException) {
                         return reject($this->closedException);
                     }
-                    $this->busy = true;
                     $this->logger->debug("Verifying $email (to {$this->connection->getRemoteAddress()}"
                         ." from {$this->connection->getLocalAddress()}).");
                     if (false === filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -152,18 +141,12 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
 
                     return $this->sendCommand('RCPT TO:', "<$email>")
                         ->then(function (Message $message) {
-                            $this->busy = false;
-
                             return $this->validateReply(
                                 $message,
                                 Message::RCODE_OK,
                                 Message::RCODE_ACTION_NOT_TAKEN,
                                 Message::RCODE_ADDRESS_INACTIVE
                             );
-                        }, function (Throwable $e) {
-                            $this->busy = false;
-
-                            throw $e;
                         });
                 });
         });
