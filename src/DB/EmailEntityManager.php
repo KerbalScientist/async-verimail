@@ -38,7 +38,6 @@ class EmailEntityManager implements LoggerAwareInterface
     private ConnectionInterface $readConnection;
     private ConnectionInterface $writeConnection;
     private MysqlQueryFactory $queryFactory;
-    private int $selectChunkSize;
     private HydrationStrategyInterface $hydrationStrategy;
     private ?EmailPersistingStream $persistingStream = null;
 
@@ -63,7 +62,6 @@ class EmailEntityManager implements LoggerAwareInterface
         $this->writeConnection = $writeConnection;
         $this->queryFactory = $queryFactory;
         $this->setLogger(new NullLogger());
-        $this->selectChunkSize = $settings['selectChunkSize'] ?? 500;
         $this->hydrationStrategy = $settings['hydrationStrategy']
             ?? new EmailHydrationStrategy(new ReflectionClass(Email::class));
     }
