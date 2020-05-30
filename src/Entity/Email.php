@@ -13,17 +13,17 @@ use DateTimeInterface;
 
 class Email
 {
-    public ?int $i_id = null;
+    public ?int $id = null;
 
-    public string $m_mail;
+    public string $email;
 
-    public VerifyStatus $s_status;
+    public VerifyStatus $status;
 
-    public DateTimeInterface $dt_updated;
+    public DateTimeInterface $updated;
 
     public function __construct()
     {
-        $this->s_status = new VerifyStatus();
-        $this->dt_updated = new DateTimeImmutable();
+        $this->status = new VerifyStatus();
+        $this->updated = new DateTimeImmutable();
     }
 }

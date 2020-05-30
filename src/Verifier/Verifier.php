@@ -7,6 +7,7 @@
 
 namespace App\Verifier;
 
+use App\Entity\Email;
 use App\Smtp\ConnectionClosedException;
 use App\Smtp\Message;
 use App\Smtp\NoMxRecordsException;
@@ -88,7 +89,7 @@ class Verifier implements LoggerAwareInterface
     }
 
     /**
-     * Creates stream that verifies email, sets `Email::$s_status` property and passes `Email` entities through.
+     * Creates stream that verifies email, sets `Email::$status` property and passes `Email` entities through.
      *
      * @param LoopInterface $loop
      * @param mixed[]       $pipeOptions Options, passed to `App::pipeThrough()`
@@ -97,11 +98,11 @@ class Verifier implements LoggerAwareInterface
      */
     public function createVerifyingStream(LoopInterface $loop, array $pipeOptions = []): DuplexStreamInterface
     {
-        $through = function ($email) {
-            return $this->verify($email->m_mail)
+        $through = function (Email $email) {
+            return $this->verify($email->email)
                 ->then(function (VerifyStatus $status) use ($email) {
                     if (!$status->isUnknown()) {
-                        $email->s_status = $status;
+                        $email->status = $status;
                     }
 
                     return $email;

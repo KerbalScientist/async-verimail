@@ -108,8 +108,8 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
             return resolve();
         }
         $query = $this->createInsertQuery($this->updateBuffer);
-        $query->onDuplicateKeyUpdate('s_status', 'VALUES(s_status)');
-        $query->onDuplicateKeyUpdate('dt_updated', 'VALUES(dt_updated)');
+        $query->onDuplicateKeyUpdate('status', 'VALUES(status)');
+        $query->onDuplicateKeyUpdate('updated', 'VALUES(updated)');
         $this->updateBuffer = [];
         $params = $this->getBindValues($query);
         $sql = $query->getStatement();
@@ -133,7 +133,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
         $query = $this->queryFactory->newInsert();
         $query->into($this->tableName);
         foreach ($emails as $email) {
-            $email->dt_updated = new DateTimeImmutable();
+            $email->updated = new DateTimeImmutable();
             $row = $this->hydrationStrategy->dehydrate($email);
             $query->addRow($row);
         }
@@ -191,7 +191,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
                     /*
                      * @var $email Email
                      */
-                    $email->i_id = $id--;
+                    $email->id = $id--;
                 }
                 $this->bufferIsFull = false;
                 if ($this->drain) {
@@ -240,7 +240,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
                 new InvalidArgumentException('Invalid Email entity given.'),
             ]);
         }
-        if (is_null($data->i_id)) {
+        if (is_null($data->id)) {
             $this->insertBuffer[] = $data;
         } else {
             $this->updateBuffer[] = $data;

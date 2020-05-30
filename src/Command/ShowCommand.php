@@ -25,8 +25,8 @@ class ShowCommand extends BaseCommand
         parent::configure();
         $this
             ->setDescription('Show emails from DB')
-            ->addUsage('--filter=\'{"m_mail":["NOT LIKE","%@mail.ru"],'.
-                '"s_status":  "unknown","dt_updated":["<", "2020-05-20 00:00"], "#limit": 100}\' 1')
+            ->addUsage('--filter=\'{"email":["NOT LIKE","%@mail.ru"],'.
+                '"status":  "unknown","updated":["<", "2020-05-20 00:00"], "#limit": 100}\' 1')
             ->addArgument('min-interval', InputArgument::OPTIONAL,
             'Each next row will be printed after min-interval seconds passed', '0');
     }
@@ -48,8 +48,8 @@ class ShowCommand extends BaseCommand
             protected function filterData(Email $email): ?array
             {
                 return [
-                    "$email->i_id $email->m_mail $email->s_status ({$email->s_status->getDescription()})".
-                    " {$email->dt_updated->format(DATE_ATOM)}",
+                    "$email->id $email->email $email->status ({$email->status->getDescription()})".
+                    " {$email->updated->format(DATE_ATOM)}",
                 ];
             }
         };

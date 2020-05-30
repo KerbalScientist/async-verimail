@@ -167,12 +167,12 @@ class EmailEntityManager implements LoggerAwareInterface
         $statusEnumValues = "'".implode("', '", VerifyStatus::all())."'";
         $sql = "
             CREATE TABLE `$this->tableName` (
-                i_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                m_mail VARCHAR(255) NOT NULL,
-                s_status ENUM($statusEnumValues),
-                dt_updated DATETIME,
-                UNIQUE KEY m_mail(m_mail),
-                KEY s_status(s_status)
+                id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                email VARCHAR(255) NOT NULL,
+                status ENUM($statusEnumValues),
+                updated DATETIME,
+                UNIQUE KEY email(email),
+                KEY status(status)
             )
         ";
         $this->logger->debugQuery($sql);
@@ -248,7 +248,7 @@ class EmailEntityManager implements LoggerAwareInterface
         $query = $this->queryFactory->newSelect();
         $query->from($this->tableName);
         $query->cols(array_column($this->getDbProperties(), 'name'));
-        $query->where('s_status IN (:statusList)');
+        $query->where('status IN (:statusList)');
         $query->bindValue('statusList', array_map('strval', $statusList));
 
         return $this->streamByQuery($query);

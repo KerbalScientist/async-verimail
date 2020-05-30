@@ -84,7 +84,7 @@ class EmailFixtures
                 return;
             }
             $email = new Email();
-            $email->m_mail = $this->generateEmail();
+            $email->email = $this->generateEmail();
             --$count;
             if (!$this->persistingStream->write($email)) {
                 $paused = true;

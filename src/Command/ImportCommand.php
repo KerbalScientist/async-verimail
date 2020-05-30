@@ -21,7 +21,7 @@ class ImportCommand extends BaseCommand
             ->setDescription('Import emails from CSV file')
             ->addArgument('filename', InputArgument::REQUIRED,
             "CSV file path to import emails from. First row contains header.\n".
-            ' Field names are same as DB column names. Field m_mail is required, others are optional.');
+            ' Field names are same as DB column names. Field email is required, others are optional.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
