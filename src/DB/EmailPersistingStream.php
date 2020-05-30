@@ -142,8 +142,6 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
      * @param QueryInterface $query
      *
      * @return mixed[]
-     *
-     * @todo Replace with Query decorator.
      */
     private function getBindValues(QueryInterface $query): array
     {

@@ -26,10 +26,6 @@ class Application extends \Symfony\Component\Console\Application
         Dotenv::createImmutable(dirname(__DIR__))->load();
         $this->container = new ServiceContainer();
 
-        /*
-         * @todo Application constructor is wrong place for this. Move it elsewhere.
-         *       Maybe we need some dedicated place for bootstrap code.
-         */
         if (extension_loaded('xdebug')) {
             ini_set('xdebug.max_nesting_level', '100000');
         }

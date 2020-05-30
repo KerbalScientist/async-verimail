@@ -77,9 +77,6 @@ class ConnectionPool implements LoggerAwareInterface, ConnectorInterface
 
     private function getConnection(string $hostname): PromiseInterface
     {
-        /*
-         * @todo Cache reliability by hostname and by MX host.
-         */
         if (isset($this->unreliableHosts[$hostname])) {
             return resolve($this->unreliableConnection);
         }
