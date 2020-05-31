@@ -80,13 +80,14 @@ class HostsConfig implements ConfigurationInterface
     public function getSettings(): HostsSettingsCollection
     {
         $objects = [];
+        $default = new HostSettings(
+            HostSettings::HOSTNAME_DEFAULT,
+            $this->config[HostSettings::HOSTNAME_DEFAULT] ?? []
+        );
         foreach ($this->config as $hostname => $item) {
-            $objects[$hostname] = new HostSettings($hostname, $item);
+            $objects[$hostname] = new HostSettings($hostname, $item, $default);
         }
 
-        return new HostsSettingsCollection(
-            $objects[HostSettings::HOSTNAME_DEFAULT] ?? new HostSettings(),
-            $objects
-        );
+        return new HostsSettingsCollection($default, $objects);
     }
 }
