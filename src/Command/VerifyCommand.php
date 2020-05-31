@@ -7,10 +7,13 @@
 
 namespace App\Command;
 
+use App\DB\EmailEntityManager;
 use App\Entity\Email;
 use App\MovingAverage;
+use App\Verifier\Factory as VerifierFactory;
 use App\Verifier\Verifier;
 use App\Verifier\VerifyStatus;
+use React\EventLoop\LoopInterface;
 use React\Promise\Deferred;
 use React\Stream\DuplexStreamInterface;
 use React\Stream\ReadableStreamInterface;
@@ -25,6 +28,10 @@ use function React\Promise\all;
 
 class VerifyCommand extends BaseCommand
 {
+    use EmailQueryCommandTrait {
+        configure as configureQuery;
+        initialize as initializeQuery;
+    }
     private const MOVING_AVG_SPEED_WINDOW_WIDTH = 15;
     private const SPEED_SHOW_DECIMALS = 2;
 
@@ -33,10 +40,18 @@ class VerifyCommand extends BaseCommand
     private MovingAverage $movingAvg;
     private float $timeStart;
     private int $verifiedCount;
+    private VerifierFactory $verifierFactory;
+
+    public function __construct(LoopInterface $eventLoop, EmailEntityManager $entityManager, VerifierFactory $verifierFactory)
+    {
+        parent::__construct($eventLoop, $entityManager);
+        $this->verifierFactory = $verifierFactory;
+    }
 
     protected function configure(): void
     {
         parent::configure();
+        $this->configureQuery();
         $this
             ->setDescription('Verify emails from DB')
             ->addUsage('--filter=\'{"email":["NOT LIKE","%@mail.ru"],'.
@@ -45,6 +60,20 @@ class VerifyCommand extends BaseCommand
                 'SOCKS5 proxy IP:PORT')
             ->addOption('hosts-config', 'hc', InputOption::VALUE_OPTIONAL,
                 'Path to hosts.yaml');
+    }
+
+    protected function initialize(InputInterface $input, OutputInterface $output): void
+    {
+        parent::initialize($input, $output);
+        $this->initializeQuery($input, $output);
+
+        if (null !== $input->getOption('hosts-config')) {
+            $this->verifierFactory->setHostsConfigFile($input->getOption('hosts-config'));
+        }
+
+        if (null !== $input->getOption('proxy')) {
+            $this->verifierFactory->addSocksProxy($input->getOption('proxy'));
+        }
     }
 
     /**
@@ -57,9 +86,8 @@ class VerifyCommand extends BaseCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $loop = $this->container->getEventLoop();
-        $entityManager = $this->container->getEntityManager();
-        $verifierFactory = $this->container->getVerifierFactory();
+        $entityManager = $this->entityManager;
+        $verifierFactory = $this->verifierFactory;
         $verifierFactory->setVerifyingCallback(function (Verifier $verifier, Email $email) {
             return $verifier->verify($email->email)
                 ->then(function (VerifyStatus $status) use ($email) {
@@ -76,13 +104,13 @@ class VerifyCommand extends BaseCommand
             'closeToEnd' => true,
             'end' => false,
         ];
-        $query = $this->container->getSelectQuery();
+        $query = $this->emailSelectQuery;
         $countPromise = $entityManager->countByQuery($query);
         $queryStream = $entityManager->streamByQuery($query);
 
         pipeThrough(
             $queryStream,
-            [$verifyingStream = $verifierFactory->createVerifyingStream($loop, $pipeOptions)],
+            [$verifyingStream = $verifierFactory->createVerifyingStream($pipeOptions)],
             $persistingStream = $entityManager->createPersistingStream(),
             $pipeOptions
         );

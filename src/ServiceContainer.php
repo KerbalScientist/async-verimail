@@ -10,18 +10,22 @@ namespace App;
 use App\Command\BaseCommand;
 use App\DB\EmailEntityManager;
 use App\DB\MysqlQueryFactory;
+use App\Throttling\Factory as ThrottlingFactory;
 use App\Verifier\Factory as VerifierFactory;
-use App\Verifier\Verifier;
 use App\Verifier\VerifyStatus;
 use Aura\SqlQuery\Common\SelectInterface;
-use Exception;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use React\EventLoop\Factory as LoopFactory;
 use React\EventLoop\LoopInterface;
 use React\MySQL\ConnectionInterface;
 use React\MySQL\Factory as MysqlFactory;
 use ReactPHP\MySQL\Decorator\BindAssocParamsConnectionDecorator;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class ServiceContainer
 {
@@ -32,7 +36,10 @@ class ServiceContainer
     private ConnectionInterface $readDbConnection;
     private ConnectionInterface $writeConnection;
     private VerifierFactory $verifierFactory;
+    private ThrottlingFactory $throttlingFactory;
     private BaseCommand $command;
+    private InputInterface $input;
+    private OutputInterface $output;
     /**
      * @var mixed[]
      */
@@ -95,10 +102,34 @@ class ServiceContainer
         return new EmailFixtures($this->getEntityManager(), $this->getEventLoop());
     }
 
+    public function getOutput(): OutputInterface
+    {
+        if (!isset($this->output)) {
+            $this->output = new ConsoleOutput();
+        }
+
+        return $this->output;
+    }
+
+    public function getInput(): InputInterface
+    {
+        if (!isset($this->input)) {
+            $this->input = new ArgvInput();
+        }
+
+        return $this->input;
+    }
+
     public function getLogger(): LoggerInterface
     {
-        if (!isset($this->logger)) {
-            $this->logger = new NullLogger();
+        if (isset($this->logger)) {
+            return $this->logger;
+        }
+        $output = $this->getOutput();
+        if ($output instanceof ConsoleOutputInterface) {
+            $this->logger = new ConsoleLogger($output->section());
+        } else {
+            $this->logger = new ConsoleLogger($output);
         }
 
         return $this->logger;
@@ -119,16 +150,6 @@ class ServiceContainer
         return $this->entityManager;
     }
 
-    /**
-     * @return Verifier
-     *
-     * @throws Exception
-     */
-    public function getVerifier(): Verifier
-    {
-        return $this->getVerifierFactory()->createVerifier();
-    }
-
     public function getVerifierFactory(): VerifierFactory
     {
         if (!isset($this->verifierFactory)) {
@@ -142,6 +163,15 @@ class ServiceContainer
         }
 
         return $this->verifierFactory;
+    }
+
+    public function getThrottlingFactory(): ThrottlingFactory
+    {
+        if (!isset($this->throttlingFactory)) {
+            $this->throttlingFactory = new ThrottlingFactory($this->getEventLoop());
+        }
+
+        return $this->throttlingFactory;
     }
 
     public function getSelectQuery(): SelectInterface
@@ -201,5 +231,15 @@ class ServiceContainer
     public function setFilter(array $filter): void
     {
         $this->filter = $filter;
+    }
+
+    public function setInput(InputInterface $input): void
+    {
+        $this->input = $input;
+    }
+
+    public function setOutput(OutputInterface $output): void
+    {
+        $this->output = $output;
     }
 }

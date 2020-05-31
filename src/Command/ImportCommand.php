@@ -28,8 +28,7 @@ class ImportCommand extends BaseCommand
     {
         $filename = $input->getArgument('filename');
         $this->setExecutePromise(
-            $this->container
-                ->getEntityManager()
+            $this->entityManager
                 ->importFromCsvBlocking($filename)
                 ->then(function () use ($output) {
                     $output->writeln('Import complete.');

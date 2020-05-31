@@ -7,6 +7,9 @@
 
 namespace App\Command;
 
+use App\DB\EmailEntityManager;
+use App\EmailFixtures;
+use React\EventLoop\LoopInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -14,6 +17,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 class GenerateFixturesCommand extends BaseCommand
 {
     protected static $defaultName = 'generate-fixtures';
+
+    private EmailFixtures $emailFixtures;
+
+    public function __construct(LoopInterface $eventLoop, EmailEntityManager $entityManager, EmailFixtures $emailFixtures)
+    {
+        parent::__construct($eventLoop, $entityManager);
+        $this->emailFixtures = $emailFixtures;
+    }
 
     protected function configure(): void
     {
@@ -27,8 +38,7 @@ class GenerateFixturesCommand extends BaseCommand
     {
         $count = (int) $input->getArgument('count');
         $this->setExecutePromise(
-            $this->container
-                ->getEmailFixtures()
+            $this->emailFixtures
                 ->generate($count)
                 ->then(function () use ($output, $count) {
                     $output->writeln("Generated $count fixtures.");

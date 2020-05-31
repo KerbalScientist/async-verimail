@@ -7,6 +7,7 @@
 
 namespace App;
 
+use App\Command\BaseCommand;
 use App\Command\ExportCommand;
 use App\Command\GenerateFixturesCommand;
 use App\Command\ImportCommand;
@@ -15,6 +16,9 @@ use App\Command\ShowCommand;
 use App\Command\UninstallCommand;
 use App\Command\VerifyCommand;
 use Dotenv\Dotenv;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class Application extends \Symfony\Component\Console\Application
 {
@@ -36,16 +40,44 @@ class Application extends \Symfony\Component\Console\Application
         $this->container = $container;
     }
 
+    public function run(InputInterface $input = null, OutputInterface $output = null)
+    {
+        if (null === $input) {
+            $input = $this->container->getInput();
+        } else {
+            $this->container->setInput($input);
+        }
+        if (null === $output) {
+            $output = $this->container->getOutput();
+        } else {
+            $this->container->setOutput($output);
+        }
+
+        return parent::run($input, $output);
+    }
+
     protected function getDefaultCommands()
     {
+        $loop = $this->container->getEventLoop();
+        $entityManager = $this->container->getEntityManager();
+
         return array_merge(parent::getDefaultCommands(), [
-            new InstallCommand($this->container),
-            new UninstallCommand($this->container),
-            new VerifyCommand($this->container),
-            new ShowCommand($this->container),
-            new ImportCommand($this->container),
-            new ExportCommand($this->container),
-            new GenerateFixturesCommand($this->container),
+            new InstallCommand($loop, $entityManager),
+            new UninstallCommand($loop, $entityManager),
+            new VerifyCommand($loop, $entityManager, $this->container->getVerifierFactory()),
+            new ShowCommand($loop, $entityManager, $this->container->getThrottlingFactory()),
+            new ImportCommand($loop, $entityManager),
+            new ExportCommand($loop, $entityManager),
+            new GenerateFixturesCommand($loop, $entityManager, $this->container->getEmailFixtures()),
         ]);
+    }
+
+    protected function doRunCommand(Command $command, InputInterface $input, OutputInterface $output)
+    {
+        if ($command instanceof BaseCommand) {
+            $this->container->setCommand($command);
+        }
+
+        return parent::doRunCommand($command, $input, $output);
     }
 }

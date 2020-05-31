@@ -93,8 +93,7 @@ class Factory implements LoggerAwareInterface
      * You can adjust what stream accepts and what it emits by calling
      *  `Factory::setVerifyingCallback()`.
      *
-     * @param LoopInterface $loop
-     * @param mixed[]       $pipeOptions Options, passed to `App::pipeThrough()`
+     * @param mixed[] $pipeOptions Options, passed to `App::pipeThrough()`
      *
      * @return DuplexStreamInterface duplex stream of Email entities at both readable and writable sides
      *
@@ -102,12 +101,13 @@ class Factory implements LoggerAwareInterface
      *
      * @see Factory::setVerifyingCallback().
      */
-    public function createVerifyingStream(LoopInterface $loop, array $pipeOptions = []): DuplexStreamInterface
+    public function createVerifyingStream(array $pipeOptions = []): DuplexStreamInterface
     {
         $verifier = $this->createVerifier();
         $through = function ($data) use ($verifier) {
             return ($this->getVerifyingCallback())($verifier, $data);
         };
+        $loop = $this->getEventLoop();
         pipeThrough(
             $collectingStream = new CollectingThroughStream($loop),
             [

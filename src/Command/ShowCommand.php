@@ -7,9 +7,11 @@
 
 namespace App\Command;
 
+use App\DB\EmailEntityManager;
 use App\Entity\Email;
 use App\Stream\ReadableStreamWrapperTrait;
-use App\Throttling\Factory;
+use App\Throttling\Factory as ThrottlingFactory;
+use React\EventLoop\LoopInterface;
 use React\Promise\Deferred;
 use React\Stream\ReadableStreamInterface;
 use Symfony\Component\Console\Input\InputArgument;
@@ -18,11 +20,27 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ShowCommand extends BaseCommand
 {
+    use EmailQueryCommandTrait {
+        configure as configureQuery;
+    }
+
+    private ThrottlingFactory $throttlingFactory;
+
     protected static $defaultName = 'show';
+
+    public function __construct(
+        LoopInterface $eventLoop,
+        EmailEntityManager $entityManager,
+        ThrottlingFactory $throttlingFactory
+    ) {
+        parent::__construct($eventLoop, $entityManager);
+        $this->throttlingFactory = $throttlingFactory;
+    }
 
     protected function configure(): void
     {
         parent::configure();
+        $this->configureQuery();
         $this
             ->setDescription('Show emails from DB')
             ->addUsage('--filter=\'{"email":["NOT LIKE","%@mail.ru"],'.
@@ -34,11 +52,9 @@ class ShowCommand extends BaseCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $minInterval = (float) $input->getArgument('min-interval');
-        $loop = $this->container->getEventLoop();
-        $entityManager = $this->container->getEntityManager();
-        $throttling = new Factory($loop);
-        $stream = $entityManager->streamByQuery($this->container->getSelectQuery());
-        $stream = $throttling->readableStream($stream, $minInterval);
+        $entityManager = $this->entityManager;
+        $stream = $entityManager->streamByQuery($this->emailSelectQuery);
+        $stream = $this->throttlingFactory->readableStream($stream, $minInterval);
         $stream = new class($stream) implements ReadableStreamInterface {
             use ReadableStreamWrapperTrait;
 

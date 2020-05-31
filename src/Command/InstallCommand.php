@@ -22,8 +22,7 @@ class InstallCommand extends BaseCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->setExecutePromise(
-            $this->container
-                ->getEntityManager()
+            $this->entityManager
                 ->installSchema()
                 ->then(function () use ($output) {
                     $output->writeln('DB schema installed successfully.');

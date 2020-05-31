@@ -22,8 +22,7 @@ class UninstallCommand extends BaseCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->setExecutePromise(
-            $this->container
-                ->getEntityManager()
+            $this->entityManager
                 ->uninstallSchema()
                 ->then(function () use ($output) {
                     $output->writeln('DB schema uninstalled successfully.');
