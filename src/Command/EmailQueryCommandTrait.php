@@ -25,7 +25,7 @@ trait EmailQueryCommandTrait
     protected function configure(): void
     {
         $this->addOption('filter', 'f', InputArgument::OPTIONAL,
-            'JSON email filter');
+            'JSON email filter', '');
     }
 
     protected function initialize(InputInterface $input, OutputInterface $output): void
