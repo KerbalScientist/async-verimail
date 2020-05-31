@@ -7,25 +7,16 @@
 
 namespace App\Verifier;
 
-use App\Entity\Email;
 use App\Smtp\ConnectionClosedException;
 use App\Smtp\Message;
 use App\Smtp\NoMxRecordsException;
-use App\Stream\CollectingThroughStream;
-use App\Stream\ResolvingThroughStream;
-use App\Stream\ThroughStream;
 use Exception;
 use InvalidArgumentException;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
-use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
-use React\Stream\CompositeStream;
-use React\Stream\DuplexStreamInterface;
-use React\Stream\Util;
 use Throwable;
-use function App\pipeThrough;
 use function React\Promise\all;
 use function React\Promise\resolve;
 
@@ -34,7 +25,6 @@ class Verifier implements LoggerAwareInterface
     use LoggerAwareTrait;
 
     private ConnectorInterface $verifierConnector;
-    private int $maxConcurrent = 1000;
     /**
      * @var array[]
      */
@@ -81,46 +71,6 @@ class Verifier implements LoggerAwareInterface
                 'status' => VerifyStatus::UNKNOWN(),
             ],
         ];
-    }
-
-    public function setMaxConcurrent(int $maxConcurrent): void
-    {
-        $this->maxConcurrent = $maxConcurrent;
-    }
-
-    /**
-     * Creates stream that verifies email, sets `Email::$status` property and passes `Email` entities through.
-     *
-     * @param LoopInterface $loop
-     * @param mixed[]       $pipeOptions Options, passed to `App::pipeThrough()`
-     *
-     * @return DuplexStreamInterface duplex stream of Email entities at both readable and writable sides
-     */
-    public function createVerifyingStream(LoopInterface $loop, array $pipeOptions = []): DuplexStreamInterface
-    {
-        $through = function (Email $email) {
-            return $this->verify($email->email)
-                ->then(function (VerifyStatus $status) use ($email) {
-                    if (!$status->isUnknown()) {
-                        $email->status = $status;
-                    }
-
-                    return $email;
-                });
-        };
-        pipeThrough(
-            $collectingStream = new CollectingThroughStream($loop),
-            [
-                $verifyingStream = new ThroughStream($through),
-            ],
-            $resolvingStream = new ResolvingThroughStream($loop, $this->maxConcurrent),
-            $pipeOptions
-        );
-        $result = new CompositeStream($resolvingStream, $collectingStream);
-        $collectingStream->removeListener('close', [$result, 'close']);
-        Util::forwardEvents($resolvingStream, $result, ['resolve']);
-
-        return $result;
     }
 
     /**

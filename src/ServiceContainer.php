@@ -10,46 +10,28 @@ namespace App;
 use App\Command\BaseCommand;
 use App\DB\EmailEntityManager;
 use App\DB\MysqlQueryFactory;
-use App\MutexRun\Factory as MutexFactory;
-use App\Smtp\Connector as SmtpConnector;
-use App\Verifier\Config\HostsConfig;
-use App\Verifier\ConnectionPool;
-use App\Verifier\Connector as VerifierConnector;
+use App\Verifier\Factory as VerifierFactory;
 use App\Verifier\Verifier;
 use App\Verifier\VerifyStatus;
 use Aura\SqlQuery\Common\SelectInterface;
-use Clue\React\Socks\Client as SocksClient;
 use Exception;
-use LogicException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use React\Dns\Config\Config as DnsConfig;
-use React\Dns\Resolver\Factory as ResolverFactory;
-use React\Dns\Resolver\ResolverInterface;
 use React\EventLoop\Factory as LoopFactory;
 use React\EventLoop\LoopInterface;
 use React\MySQL\ConnectionInterface;
 use React\MySQL\Factory as MysqlFactory;
-use React\Socket\Connector as SocketConnector;
-use React\Socket\ConnectorInterface;
 use ReactPHP\MySQL\Decorator\BindAssocParamsConnectionDecorator;
-use Symfony\Component\Yaml\Yaml;
 
 class ServiceContainer
 {
-    const DEFAULT_NAMESERVER = '8.8.8.8';
-
     private LoggerInterface $logger;
     private LoopInterface $eventLoop;
     private EmailEntityManager $entityManager;
-    private ?string $proxy = null;
     private string $hostsConfigFile;
-    private HostsConfig $hostsConfig;
     private ConnectionInterface $readDbConnection;
     private ConnectionInterface $writeConnection;
-    private ResolverInterface $dnsResolver;
-    private Verifier $verifier;
-    private ConnectorInterface $socketConnector;
+    private VerifierFactory $verifierFactory;
     private BaseCommand $command;
     /**
      * @var mixed[]
@@ -61,24 +43,6 @@ class ServiceContainer
     public function __construct()
     {
         $this->hostsConfigFile = dirname(__DIR__).'/config/hosts.yaml';
-    }
-
-    public function getHostsConfig(): HostsConfig
-    {
-        if (isset($this->hostsConfig)) {
-            return $this->hostsConfig;
-        }
-        $config = new HostsConfig();
-        if (!is_file($this->hostsConfigFile)) {
-            throw new Exception("Config file '$this->hostsConfigFile' not found.");
-        }
-        $contents = file_get_contents($this->hostsConfigFile);
-        if (false === $contents) {
-            throw new Exception("Cannot read config from '$this->hostsConfigFile'.");
-        }
-        $config->loadArray(Yaml::parse($contents)['hosts']);
-
-        return $this->hostsConfig = $config;
     }
 
     public function getReadDbConnection(): ConnectionInterface
@@ -162,59 +126,22 @@ class ServiceContainer
      */
     public function getVerifier(): Verifier
     {
-        if (isset($this->verifier)) {
-            return $this->verifier;
-        }
-        $resolver = $this->getDnsResolver();
-        $config = $this->getHostsConfig();
-        $connector = $this->getSocketConnector();
-        $loop = $this->getEventLoop();
-        $logger = $this->getLogger();
-        $mutex = new MutexFactory($loop);
-        $settings = $config->getSettings();
-        $verifierConnector = new SmtpConnector(
-            $resolver,
-            $connector,
-            $mutex
-        );
-        $verifierConnector->setLogger($logger);
-        $verifierConnector = new VerifierConnector($verifierConnector, $mutex, $settings);
-        $verifierConnector->setLogger($logger);
-        $verifierConnector = new ConnectionPool($verifierConnector, $loop, $config->getSettings());
-        $verifierConnector->setLogger($logger);
-
-        $this->verifier = new Verifier($verifierConnector);
-        $this->verifier->setLogger($this->getLogger());
-        $this->verifier->setMaxConcurrent((int) $this->getEnvConfigValue('MAX_CONCURRENT', 1000));
-
-        return $this->verifier;
+        return $this->getVerifierFactory()->createVerifier();
     }
 
-    public function getSocketConnector(): ConnectorInterface
+    public function getVerifierFactory(): VerifierFactory
     {
-        if (!isset($this->socketConnector)) {
-            $this->socketConnector = new SocketConnector($this->getEventLoop(), [
-                'timeout' => (int) $this->getEnvConfigValue('CONNECT_TIMEOUT', 30),
-            ]);
-            if (isset($this->proxy)) {
-                $this->socketConnector = new SocksClient($this->proxy, $this->socketConnector);
-            }
+        if (!isset($this->verifierFactory)) {
+            $factory = new VerifierFactory();
+            $factory->setMaxConcurrent((int) $this->getEnvConfigValue('MAX_CONCURRENT', 1000));
+            $factory->setConnectTimeout((int) $this->getEnvConfigValue('CONNECT_TIMEOUT', 30));
+            $factory->setLogger($this->getLogger());
+            $factory->setHostsConfigFile($this->hostsConfigFile);
+            $factory->setEventLoop($this->getEventLoop());
+            $this->verifierFactory = $factory;
         }
 
-        return $this->socketConnector;
-    }
-
-    public function getDnsResolver(): ResolverInterface
-    {
-        if (!isset($this->dnsResolver)) {
-            $config = DnsConfig::loadSystemConfigBlocking();
-            $this->dnsResolver = (new ResolverFactory())->createCached(
-                $config->nameservers ? reset($config->nameservers) : self::DEFAULT_NAMESERVER,
-                $this->getEventLoop()
-            );
-        }
-
-        return $this->dnsResolver;
+        return $this->verifierFactory;
     }
 
     public function getSelectQuery(): SelectInterface
@@ -240,10 +167,7 @@ class ServiceContainer
 
     public function setHostsConfigFile(string $hostsConfigFile): void
     {
-        if (isset($this->hostsConfig)) {
-            throw new LogicException('Config file is already loaded.');
-        }
-        $this->hostsConfigFile = $hostsConfigFile;
+        $this->getVerifierFactory()->setHostsConfigFile($hostsConfigFile);
     }
 
     public function setLogger(LoggerInterface $logger): void
@@ -258,12 +182,7 @@ class ServiceContainer
 
     public function setProxy(?string $proxy): void
     {
-        $this->proxy = $proxy;
-    }
-
-    public function setHostsConfig(HostsConfig $hostsConfig): void
-    {
-        $this->hostsConfig = $hostsConfig;
+        $this->getVerifierFactory()->addSocksProxy($proxy);
     }
 
     public function setReadDbConnection(ConnectionInterface $readDbConnection): void

@@ -7,7 +7,10 @@
 
 namespace App\Command;
 
+use App\Entity\Email;
 use App\MovingAverage;
+use App\Verifier\Verifier;
+use App\Verifier\VerifyStatus;
 use React\Promise\Deferred;
 use React\Stream\DuplexStreamInterface;
 use React\Stream\ReadableStreamInterface;
@@ -56,7 +59,17 @@ class VerifyCommand extends BaseCommand
     {
         $loop = $this->container->getEventLoop();
         $entityManager = $this->container->getEntityManager();
-        $verifier = $this->container->getVerifier();
+        $verifierFactory = $this->container->getVerifierFactory();
+        $verifierFactory->setVerifyingCallback(function (Verifier $verifier, Email $email) {
+            return $verifier->verify($email->email)
+                ->then(function (VerifyStatus $status) use ($email) {
+                    if (!$status->isUnknown()) {
+                        $email->status = $status;
+                    }
+
+                    return $email;
+                });
+        });
 
         $pipeOptions = [
             'error' => true,
@@ -69,7 +82,7 @@ class VerifyCommand extends BaseCommand
 
         pipeThrough(
             $queryStream,
-            [$verifyingStream = $verifier->createVerifyingStream($loop, $pipeOptions)],
+            [$verifyingStream = $verifierFactory->createVerifyingStream($loop, $pipeOptions)],
             $persistingStream = $entityManager->createPersistingStream(),
             $pipeOptions
         );
