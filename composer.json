@@ -31,6 +31,8 @@
     "bin": ["bin/async-verimail"],
     "scripts": {
         "app:run": "php src/run.php",
+        "app:install": "php src/run.php install",
+        "app:uninstall": "php src/run.php uninstall",
         "test:ecs": "vendor/bin/ecs check",
         "fix:ecs": "vendor/bin/ecs check --fix",
         "test:phpstan": "vendor/bin/phpstan analyse -l 6 src --memory-limit=256M",
