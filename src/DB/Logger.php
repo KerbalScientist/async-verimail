@@ -14,11 +14,6 @@ class Logger implements LoggerInterface
 {
     private LoggerInterface $innerLogger;
 
-    /**
-     * LoggerDecorator constructor.
-     *
-     * @param LoggerInterface $innerLogger
-     */
     public function __construct(LoggerInterface $innerLogger)
     {
         $this->innerLogger = $innerLogger;

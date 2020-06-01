@@ -231,22 +231,6 @@ class EmailEntityManager implements LoggerAwareInterface
     }
 
     /**
-     * @param \App\Verifier\VerifyStatus[] $statusList
-     *
-     * @return ReadableStreamInterface readable stream of Email entities
-     */
-    public function streamByStatus(array $statusList): ReadableStreamInterface
-    {
-        $query = $this->queryFactory->newSelect();
-        $query->from($this->tableName);
-        $query->cols(array_column($this->getDbProperties(), 'name'));
-        $query->where('status IN (:statusList)');
-        $query->bindValue('statusList', array_map('strval', $statusList));
-
-        return $this->streamByQuery($query);
-    }
-
-    /**
      * Returns promise, which will be fulfilled by query rows count.
      *
      * Rows will be counted with respect of LIMIT and OFFSET, so for query
@@ -294,7 +278,7 @@ class EmailEntityManager implements LoggerAwareInterface
                 'end' => false,
             ]
         );
-//        $this->readConnection->queryStream($sql, $params)->pipe($result);
+
         return $result;
     }
 
