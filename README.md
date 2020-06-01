@@ -63,6 +63,12 @@ bin/async-verimail show
 
 *Run `bin/async-verimail status-list` to see `status` field values meaning.*
 
+## Configuration
+
+Environment configuration variables can be found in `.env.example` file and set in `.env` file or by shell.
+
+Host-specific settings can be found in `config/hosts.yaml` and paramethers reference reside in `config/hosts.reference.yaml`.
+
 ## Uninstallation
 
 Run to drop DB schema:
