@@ -32,7 +32,7 @@ class VerifyCommand extends BaseCommand
         configure as configureQuery;
         initialize as initializeQuery;
     }
-    private const MOVING_AVG_SPEED_WINDOW_WIDTH = 15;
+    private const SPEED_MOVING_AVG_WINDOW_WIDTH = 15;
     private const SPEED_SHOW_DECIMALS = 2;
 
     protected static $defaultName = 'verify';
@@ -187,7 +187,7 @@ class VerifyCommand extends BaseCommand
     private function printCurrentSpeed(OutputInterface $output, float $time): void
     {
         if (!isset($this->movingAvg)) {
-            $this->movingAvg = new MovingAverage(self::MOVING_AVG_SPEED_WINDOW_WIDTH);
+            $this->movingAvg = new MovingAverage(self::SPEED_MOVING_AVG_WINDOW_WIDTH);
         }
         $this->movingAvg->insertValue($time, $time - ($this->movingAvg->getWindowEnd() ?? $this->timeStart));
         if (0 == $this->movingAvg->get()) {
