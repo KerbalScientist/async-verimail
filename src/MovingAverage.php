@@ -8,6 +8,7 @@
 
 namespace App;
 
+use InvalidArgumentException;
 use LogicException;
 use SplPriorityQueue;
 
@@ -20,6 +21,9 @@ class MovingAverage
 
     public function __construct(float $windowWidth)
     {
+        if ($windowWidth <= 0) {
+            throw new InvalidArgumentException('Window width must be greater than 0.');
+        }
         $this->windowWidth = $windowWidth;
     }
 
@@ -61,6 +65,10 @@ class MovingAverage
      */
     public function getCount(): int
     {
+        if (!isset($this->buffer)) {
+            return 0;
+        }
+
         return $this->buffer->count();
     }
 
