@@ -31,7 +31,6 @@ use React\Stream\CompositeStream;
 use React\Stream\DuplexStreamInterface;
 use React\Stream\Util;
 use Symfony\Component\Yaml\Yaml;
-use function App\pipeThrough;
 
 class Factory implements LoggerAwareInterface
 {
@@ -93,31 +92,28 @@ class Factory implements LoggerAwareInterface
      * You can adjust what stream accepts and what it emits by calling
      *  `Factory::setVerifyingCallback()`.
      *
-     * @param mixed[] $pipeOptions Options, passed to `App::pipeThrough()`
-     *
-     * @return DuplexStreamInterface duplex stream of Email entities at both readable and writable sides
+     * @return DuplexStreamInterface
      *
      * @throws Exception
      *
      * @see Factory::setVerifyingCallback().
      */
-    public function createVerifyingStream(array $pipeOptions = []): DuplexStreamInterface
+    public function createVerifyingStream(): DuplexStreamInterface
     {
         $verifier = $this->createVerifier();
-        $through = function ($data) use ($verifier) {
-            return ($this->getVerifyingCallback())($verifier, $data);
-        };
+        $callback = $this->getVerifyingCallback();
         $loop = $this->getEventLoop();
-        pipeThrough(
-            $collectingStream = new CollectingThroughStream($loop),
-            [
-                $verifyingStream = new ThroughStream($through),
-            ],
-            $resolvingStream = new ResolvingThroughStream($loop, $this->maxConcurrent),
-            $pipeOptions
-        );
+
+        $collectingStream = new CollectingThroughStream($loop);
+        $verifyingStream = new ThroughStream(function ($data) use ($verifier, $callback) {
+            return $callback($verifier, $data);
+        });
+        $resolvingStream = new ResolvingThroughStream($loop, $this->maxConcurrent);
+        $collectingStream->pipe($verifyingStream, ['end' => true]);
+        $verifyingStream->pipe($resolvingStream, ['end' => true]);
         $result = new CompositeStream($resolvingStream, $collectingStream);
         $collectingStream->removeListener('close', [$result, 'close']);
+        Util::forwardEvents($verifyingStream, $result, ['error']);
         Util::forwardEvents($resolvingStream, $result, ['resolve']);
 
         return $result;

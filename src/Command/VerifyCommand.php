@@ -98,20 +98,19 @@ class VerifyCommand extends BaseCommand
                 });
         });
 
-        $pipeOptions = [
-            'error' => true,
-            'closeToEnd' => true,
-            'end' => false,
-        ];
         $query = $this->emailSelectQuery;
         $countPromise = $entityManager->countByQuery($query);
         $queryStream = $entityManager->streamByQuery($query);
 
         pipeThrough(
             $queryStream,
-            [$verifyingStream = $verifierFactory->createVerifyingStream($pipeOptions)],
+            [$verifyingStream = $verifierFactory->createVerifyingStream()],
             $persistingStream = $entityManager->createPersistingStream(),
-            $pipeOptions
+            [
+                'error' => true,
+                'closeToEnd' => true,
+                'end' => false,
+            ]
         );
 
         $deferred = new Deferred();
