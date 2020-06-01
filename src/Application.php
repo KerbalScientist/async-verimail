@@ -13,6 +13,7 @@ use App\Command\GenerateFixturesCommand;
 use App\Command\ImportCommand;
 use App\Command\InstallCommand;
 use App\Command\ShowCommand;
+use App\Command\ShowStatusListCommand;
 use App\Command\UninstallCommand;
 use App\Command\VerifyCommand;
 use Dotenv\Dotenv;
@@ -66,6 +67,7 @@ class Application extends \Symfony\Component\Console\Application
             new UninstallCommand($loop, $entityManager),
             new VerifyCommand($loop, $entityManager, $this->container->getVerifierFactory()),
             new ShowCommand($loop, $entityManager, $this->container->getThrottlingFactory()),
+            new ShowStatusListCommand(),
             new ImportCommand($loop, $entityManager),
             new ExportCommand($loop, $entityManager),
             new GenerateFixturesCommand($loop, $entityManager, $this->container->getEmailFixtures()),
