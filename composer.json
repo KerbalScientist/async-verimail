@@ -28,6 +28,7 @@
             "src/functions.php"
         ]
     },
+    "bin": ["bin/async-verimail"],
     "scripts": {
         "app:run": "php src/run.php",
         "test:ecs": "vendor/bin/ecs check",
