@@ -36,7 +36,7 @@ trait EmailQueryCommandTrait
         if (null === $filter) {
             $filter = ['status' => VerifyStatus::UNKNOWN];
         } else {
-            $filter = json_decode($input->getOption('filter'));
+            $filter = json_decode($input->getOption('filter'), true);
         }
         if (null === $filter) {
             throw new InvalidOptionException('Invalid JSON in --filter option: '.json_last_error_msg());
