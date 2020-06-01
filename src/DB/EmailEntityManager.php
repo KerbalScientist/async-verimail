@@ -209,14 +209,6 @@ class EmailEntityManager implements LoggerAwareInterface
         $stream->on('data', function (Email $email) use ($f) {
             fputcsv($f, $this->hydrationStrategy->dehydrate($email));
         });
-        $stream->on('end', function () use (&$f, $deferred) {
-            if ($f) {
-                fclose($f);
-                $f = null;
-            }
-            $this->logger->info('Export complete.');
-            $deferred->resolve();
-        });
         $stream->on('close', function () use (&$f, $deferred) {
             if ($f) {
                 fclose($f);
