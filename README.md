@@ -1,4 +1,4 @@
-# AsyncVeryMail
+# AsyncVerimail
 
 Asynchronous email account existence checker based on SMTP "RCPT TO" command response.
 
