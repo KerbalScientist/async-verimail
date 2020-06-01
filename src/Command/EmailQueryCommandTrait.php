@@ -34,18 +34,13 @@ trait EmailQueryCommandTrait
         parent::initialize($input, $output);
         $filter = $input->getOption('filter');
         if (null === $filter) {
-            $filter = [];
+            $filter = ['status' => VerifyStatus::UNKNOWN];
         } else {
             $filter = json_decode($input->getOption('filter'));
         }
         if (null === $filter) {
             throw new InvalidOptionException('Invalid JSON in --filter option: '.json_last_error_msg());
         }
-        $this->emailSelectQuery = $this->entityManager->createSelectQuery(
-            json_decode($input->getOption('filter'), true)
-            ?? [
-                'status' => VerifyStatus::UNKNOWN,
-            ]
-        );
+        $this->emailSelectQuery = $this->entityManager->createSelectQuery($filter);
     }
 }
