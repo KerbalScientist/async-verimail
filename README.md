@@ -23,6 +23,9 @@ Asynchronous email account existence checker based on SMTP "RCPT TO" command res
 
 Current settings work well with most of the popular email domains like gmail.com, outlook.com, yandex.ru, mail.ru,
  but some very restrictive MX servers may ban by IP.
+ 
+Empirically from many runs, I may say it's safe to run any amount of checks on email domains:
+ gmail.com, outlook.com, yandex.ru, mail.ru.
 
 ### 1. Import emails from CSV file
 
