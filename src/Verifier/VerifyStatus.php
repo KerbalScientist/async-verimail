@@ -46,15 +46,17 @@ class VerifyStatus
     private static function getDescriptions(): array
     {
         return [
-            self::UNKNOWN => 'Нет данных',
-            self::INVALID => 'Неверный формат адреса',
-            self::SMTP_CHECK_IMPOSSIBLE => 'Невозможно проверить с помощью SMTP RCPT TO',
-            self::NO_MX_RECORDS => 'Не найдены записи MX для домена',
-            self::SMTP_VERIFIED => 'Пользователь существует',
-            self::SMTP_USER_NOT_FOUND => 'Пользователь не найден',
-            self::SMTP_RETRY_LATER => 'Исчерпана квота на количество запросов к SMTP с IP-адреса,'.
-                ' либо IP-адрес заблокирован сервером',
-            self::SMTP_UNEXPECTED_REPLY => 'Сервер вернул неверный код ответа',
+            self::UNKNOWN => 'No data',
+            self::INVALID => 'Email address is invalid',
+            self::SMTP_CHECK_IMPOSSIBLE => 'Not possible to check email using SMTP RCPT TO reply.'.
+                ' Usually this means that server accepts any email, sent by RCPT TO',
+            self::NO_MX_RECORDS => 'Email domain has no MX records',
+            self::SMTP_VERIFIED => 'Email account exists',
+            self::SMTP_USER_NOT_FOUND => 'Email account not found',
+            self::SMTP_RETRY_LATER => 'Too many SMTP messages or connections from IP address'.
+                ' or IP address is banned by server',
+            self::SMTP_UNEXPECTED_REPLY => 'Server reply has unexpected reply code. Run verify command'.
+                ' with --filter for this email and -vvv option to see server reply',
         ];
     }
 
