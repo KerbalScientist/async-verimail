@@ -233,7 +233,7 @@ class EmailEntityManager implements LoggerAwareInterface
     /**
      * Returns promise, which will be fulfilled by query rows count.
      *
-     * Rows will be counted with respect of LIMIT and OFFSET, so for query
+     * Rows will be counted with respect to LIMIT and OFFSET, so for query
      *  with LIMIT 100 it will always return 100 if total count of matching rows is more than 100.
      *
      * @param SelectInterface $query
