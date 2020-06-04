@@ -29,7 +29,7 @@ class LevelFilteringLogger extends AbstractLogger implements LoggerInterface
     public function __construct(LoggerInterface $innerLogger, ?array $showLevels = null)
     {
         $this->innerLogger = $innerLogger;
-        if (is_null($showLevels)) {
+        if (\is_null($showLevels)) {
             $showLevels = [
                 LogLevel::EMERGENCY,
                 LogLevel::ALERT,

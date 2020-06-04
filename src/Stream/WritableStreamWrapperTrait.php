@@ -95,7 +95,7 @@ trait WritableStreamWrapperTrait
      */
     public function end($data = null)
     {
-        if (!is_null($data)) {
+        if (!\is_null($data)) {
             $data = $this->filterData($data);
         }
         $this->innerStream->end($this->filterData($data));

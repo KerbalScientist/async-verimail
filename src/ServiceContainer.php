@@ -49,7 +49,7 @@ class ServiceContainer
 
     public function __construct()
     {
-        $this->hostsConfigFile = dirname(__DIR__).'/config/hosts.yaml';
+        $this->hostsConfigFile = \dirname(__DIR__).'/config/hosts.yaml';
     }
 
     public function getReadDbConnection(): ConnectionInterface
@@ -78,7 +78,7 @@ class ServiceContainer
         $url .= '@'.$this->getEnvConfigValue('DB_HOST', 'localhost');
         $url .= ':'.$this->getEnvConfigValue('DB_PORT', '3306');
         $schemaName = $this->getEnvConfigValue('DB_SCHEMA');
-        if (!is_null($schemaName)) {
+        if (!\is_null($schemaName)) {
             $url .= "/$schemaName";
         }
         $url .= '?idle=-1&timeout=-1';

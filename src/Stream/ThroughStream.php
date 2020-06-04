@@ -13,8 +13,6 @@ use InvalidArgumentException;
 use React\Stream\DuplexStreamInterface;
 use React\Stream\Util;
 use React\Stream\WritableStreamInterface;
-use function call_user_func;
-use function is_callable;
 
 /**
  * @see \React\Stream\ThroughStream
@@ -44,7 +42,7 @@ final class ThroughStream extends EventEmitter implements DuplexStreamInterface
      */
     public function __construct($callback = null)
     {
-        if (null !== $callback && !is_callable($callback)) {
+        if (null !== $callback && !\is_callable($callback)) {
             throw new InvalidArgumentException('Invalid transformation callback given');
         }
 
@@ -133,7 +131,7 @@ final class ThroughStream extends EventEmitter implements DuplexStreamInterface
 
         if (null !== $this->callback) {
             try {
-                $data = call_user_func($this->callback, $data);
+                $data = \call_user_func($this->callback, $data);
             } catch (Exception $e) {
                 $this->emit('error', array($e));
                 $this->close();

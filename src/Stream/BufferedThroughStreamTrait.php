@@ -46,7 +46,7 @@ trait BufferedThroughStreamTrait
 
     public function flush(bool $ignorePaused = false): void
     {
-        while (count($this->buffer) && ($ignorePaused || !$this->paused)) {
+        while (\count($this->buffer) && ($ignorePaused || !$this->paused)) {
             try {
                 $this->emit('data', [array_shift($this->buffer)]);
             } catch (Throwable $e) {
@@ -56,7 +56,7 @@ trait BufferedThroughStreamTrait
                 return;
             }
         }
-        if (!count($this->buffer) && $this->drain) {
+        if (!\count($this->buffer) && $this->drain) {
             $this->drain = false;
             $this->emit('drain');
         }

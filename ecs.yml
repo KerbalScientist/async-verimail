@@ -6,6 +6,9 @@ services:
       - 'return'
       - 'throw'
       - 'try'
+  PhpCsFixer\Fixer\FunctionNotation\NativeFunctionInvocationFixer:
+    include:
+      - '@@compiler_optimized'
 parameters:
   sets:
     - 'symfony'

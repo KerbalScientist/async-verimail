@@ -34,7 +34,7 @@ class ResolvingThroughStream extends EventEmitter implements DuplexStreamInterfa
 
     public function end($data = null)
     {
-        if (!is_null($data)) {
+        if (!\is_null($data)) {
             $this->write($data);
         }
         $end = function () {
@@ -77,7 +77,7 @@ class ResolvingThroughStream extends EventEmitter implements DuplexStreamInterfa
             $this->close();
         });
 
-        return (count($this->promiseBuffer) + count($this->buffer)) < $this->softBufferSize;
+        return (\count($this->promiseBuffer) + \count($this->buffer)) < $this->softBufferSize;
     }
 
     public function close()

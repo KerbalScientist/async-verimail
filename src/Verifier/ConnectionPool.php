@@ -58,7 +58,7 @@ class ConnectionPool implements LoggerAwareInterface, ConnectorInterface
             ->findForHostname($hostname)
             ->getMaxConnections();
         if (empty($this->connectionPool[$hostname])
-            || count($this->connectionPool[$hostname]) < $maxConnections) {
+            || \count($this->connectionPool[$hostname]) < $maxConnections) {
             $this->logger->debug("Connection - create for $hostname.");
 
             return $this->getConnection($hostname);

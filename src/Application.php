@@ -28,10 +28,10 @@ class Application extends \Symfony\Component\Console\Application
     public function __construct(string $name = 'UNKNOWN', string $version = 'UNKNOWN')
     {
         parent::__construct($name, $version);
-        Dotenv::createImmutable(dirname(__DIR__))->load();
+        Dotenv::createImmutable(\dirname(__DIR__))->load();
         $this->container = new ServiceContainer();
 
-        if (extension_loaded('xdebug')) {
+        if (\extension_loaded('xdebug')) {
             ini_set('xdebug.max_nesting_level', '100000');
         }
     }

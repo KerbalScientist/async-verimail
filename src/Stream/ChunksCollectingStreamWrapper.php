@@ -59,7 +59,7 @@ class ChunksCollectingStreamWrapper implements ReadableStreamInterface, Promisor
             $this->buffer[] = $args;
         }
 
-        if (count($this->buffer) >= $this->chunkSize) {
+        if (\count($this->buffer) >= $this->chunkSize) {
             $this->flush();
         }
 

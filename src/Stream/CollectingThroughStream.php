@@ -34,6 +34,6 @@ class CollectingThroughStream implements DuplexStreamInterface
         $this->buffer[] = $data;
         $this->flush();
 
-        return !count($this->buffer);
+        return !\count($this->buffer);
     }
 }

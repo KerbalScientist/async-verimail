@@ -149,7 +149,7 @@ trait ReactCommandTrait
         }
 
         return $promise->then([$this->eventLoop, 'stop'], function (Throwable $error) {
-            if (is_null($this->error)) {
+            if (\is_null($this->error)) {
                 $this->error = $error;
             }
             $this->eventLoop->stop();

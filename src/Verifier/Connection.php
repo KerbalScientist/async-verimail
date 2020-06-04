@@ -216,7 +216,7 @@ class Connection implements LoggerAwareInterface, ConnectionInterface
             $this->close();
         }
         $this->throwSenderStatusException($message);
-        if ($expectedReplyCodes && !in_array($message->rcode, $expectedReplyCodes, true)) {
+        if ($expectedReplyCodes && !\in_array($message->rcode, $expectedReplyCodes, true)) {
             $exception = new UnexpectedReplyException($message, $expectedReplyCodes);
             $this->closedException = $exception;
             $this->emit('error', [$exception]);

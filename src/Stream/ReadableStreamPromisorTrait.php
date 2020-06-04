@@ -48,7 +48,7 @@ trait ReadableStreamPromisorTrait
             }
             $old = array_shift($this->resolveQueue);
             $old->resolve($singleDataArg ? $args[0] : $args);
-            if (count($this->returnQueue) == $this->bufferSoftSize) {
+            if (\count($this->returnQueue) == $this->bufferSoftSize) {
                 $this->pause();
             }
         });
@@ -76,7 +76,7 @@ trait ReadableStreamPromisorTrait
         if (!$this->hasData()) {
             return reject(new NoDataException());
         }
-        $oldCount = count($this->returnQueue);
+        $oldCount = \count($this->returnQueue);
         if (!$this->returnQueue) {
             $this->returnQueue[] = $this->resolveQueue[] = new Deferred();
         }

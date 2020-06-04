@@ -67,10 +67,10 @@ class EmailHydrationStrategy implements HydrationStrategyInterface
             if ($property->isStatic()) {
                 continue;
             }
-            if (!array_key_exists($property->name, $row)) {
+            if (!\array_key_exists($property->name, $row)) {
                 continue;
             }
-            if (!$property->hasType() || is_null($row[$property->name])) {
+            if (!$property->hasType() || \is_null($row[$property->name])) {
                 $object->{$property->name} = $row[$property->name];
 
                 continue;

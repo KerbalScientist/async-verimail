@@ -29,7 +29,7 @@ trait ReadableStreamWrapperTrait
         $this->forwardReadEvents();
         $innerStream->on('data', function (...$args) {
             $emitArgs = $this->filterData(...$args);
-            if (is_null($emitArgs)) {
+            if (\is_null($emitArgs)) {
                 return;
             }
             $this->emit('data', $emitArgs);

@@ -37,7 +37,7 @@ class HostSettings
         array $settings = [],
         ?self $default = null
     ) {
-        if (array_key_exists('hostname', $settings)) {
+        if (\array_key_exists('hostname', $settings)) {
             throw new InvalidArgumentException("Unknown parameter 'hostname'.");
         }
         if ($default) {

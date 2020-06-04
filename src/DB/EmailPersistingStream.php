@@ -221,7 +221,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
      */
     public function end($data = null)
     {
-        if (!is_null($data)) {
+        if (!\is_null($data)) {
             $this->write($data);
         }
         $this->close();
@@ -240,16 +240,16 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
                 new InvalidArgumentException('Invalid Email entity given.'),
             ]);
         }
-        if (is_null($data->id)) {
+        if (\is_null($data->id)) {
             $this->insertBuffer[] = $data;
         } else {
             $this->updateBuffer[] = $data;
         }
-        if (count($this->insertBuffer) >= $this->insertBufferSize) {
+        if (\count($this->insertBuffer) >= $this->insertBufferSize) {
             $this->bufferIsFull = true;
             $this->flushInsertBuffer();
         }
-        if (count($this->updateBuffer) >= $this->updateBufferSize) {
+        if (\count($this->updateBuffer) >= $this->updateBufferSize) {
             $this->bufferIsFull = true;
             $this->flushUpdateBuffer();
         }

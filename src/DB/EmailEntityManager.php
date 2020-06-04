@@ -81,17 +81,17 @@ class EmailEntityManager implements LoggerAwareInterface
             unset($filter['#offset']);
         }
         foreach ($filter as $colName => $value) {
-            if (!in_array($colName, $colNames)) {
+            if (!\in_array($colName, $colNames)) {
                 continue;
             }
-            if (!is_array($value)) {
+            if (!\is_array($value)) {
                 /* @noinspection PhpMethodParametersCountMismatchInspection */
                 $query->where("$colName = ?", $value);
 
                 continue;
             }
             $operator = array_shift($value);
-            if (!$operator || !count($value)) {
+            if (!$operator || !\count($value)) {
                 continue;
             }
             $negate = false;
@@ -101,10 +101,10 @@ class EmailEntityManager implements LoggerAwareInterface
                 $query->where("$colName <> ?", $value);
 
                 continue;
-            } elseif ('NOT ' === substr($operator, 0, strlen('NOT '))) {
+            } elseif ('NOT ' === substr($operator, 0, \strlen('NOT '))) {
                 $negate = true;
                 $operator = trim(
-                    substr($operator, strlen('NOT '))
+                    substr($operator, \strlen('NOT '))
                 );
             }
             if ('IN' === $operator) {
@@ -139,7 +139,7 @@ class EmailEntityManager implements LoggerAwareInterface
     private function getDbProperties(): array
     {
         static $result = null;
-        if (!is_null($result)) {
+        if (!\is_null($result)) {
             return $result;
         }
         $emailReflection = new ReflectionClass(Email::class);

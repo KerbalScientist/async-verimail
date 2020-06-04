@@ -42,7 +42,7 @@ final class Message
     {
         $message = new self();
         $code = substr($data, 0, self::RCODE_LENGTH);
-        if (self::RCODE_LENGTH !== strlen($code) || !is_numeric($code)) {
+        if (self::RCODE_LENGTH !== \strlen($code) || !is_numeric($code)) {
             throw new InvalidArgumentException('Malformed SMTP reply.');
         }
         $message->rcode = (int) $code;

@@ -9,7 +9,7 @@ namespace App;
 
 use Exception;
 
-require dirname(__DIR__).'/vendor/autoload.php';
+require \dirname(__DIR__).'/vendor/autoload.php';
 
 try {
     (new Application())->run();

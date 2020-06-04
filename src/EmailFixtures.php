@@ -101,7 +101,7 @@ class EmailFixtures
         $length = rand($this->maxUserLength, $this->minUserLength);
         $username = '';
         for ($i = 0; $i < $length; ++$i) {
-            $username .= $this->characters[rand(0, strlen($this->characters) - 1)];
+            $username .= $this->characters[rand(0, \strlen($this->characters) - 1)];
         }
         $domainRandom = rand(0, 100);
         $densitySum = 0;

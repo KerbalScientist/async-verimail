@@ -72,7 +72,7 @@ class VerifyStatus
 
     public static function __callStatic(string $name, array $arguments): self
     {
-        return new self(constant(self::class."::$name"));
+        return new self(\constant(self::class."::$name"));
     }
 
     public function __toString(): string
