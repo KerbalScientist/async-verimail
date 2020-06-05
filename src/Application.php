@@ -29,7 +29,11 @@ class Application extends \Symfony\Component\Console\Application
     {
         parent::__construct($name, $version);
         Dotenv::createImmutable(\dirname(__DIR__))->load();
-        $this->container = new ServiceContainer();
+        $factory = new ServiceFactory();
+        $envConfig = new EnvConfig();
+        $envConfig->loadArray($_SERVER);
+        $envConfig->configureFactory($factory);
+        $this->container = new ServiceContainer($factory);
 
         if (\extension_loaded('xdebug')) {
             ini_set('xdebug.max_nesting_level', '100000');
@@ -81,5 +85,16 @@ class Application extends \Symfony\Component\Console\Application
         }
 
         return parent::doRunCommand($command, $input, $output);
+    }
+
+    /**
+     * @param string $name
+     * @param mixed  $default
+     *
+     * @return mixed
+     */
+    private function getEnvConfigValue(string $name, $default = null)
+    {
+        return $_SERVER[$name] ?? $default;
     }
 }

@@ -20,6 +20,11 @@ parameters:
                 - src/Stream/BufferedThroughStreamTrait.php
                 - src/Stream/ThroughStream.php
                 - src/Verifier/Connection.php
+        # PHPStan bug. Wrong type inferred.
+        -
+            message: "#undefined method Symfony\\\\Component\\\\Config\\\\Definition\\\\#"
+            paths:
+                - src/EnvConfig.php
 
 parametersSchema:
     ergebnis: structure([
