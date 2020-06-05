@@ -7,7 +7,6 @@
 
 namespace App;
 
-use App\Command\BaseCommand;
 use App\DB\EmailEntityManager;
 use App\Throttling\Factory as ThrottlingFactory;
 use App\Verifier\Factory as VerifierFactory;
@@ -28,7 +27,6 @@ class ServiceContainer
     private ConnectionInterface $writeConnection;
     private VerifierFactory $verifierFactory;
     private ThrottlingFactory $throttlingFactory;
-    private BaseCommand $command;
     private InputInterface $input;
     private OutputInterface $output;
     private ServiceFactory $factory;
@@ -123,11 +121,6 @@ class ServiceContainer
         }
 
         return $this->throttlingFactory;
-    }
-
-    public function setCommand(BaseCommand $command): void
-    {
-        $this->command = $command;
     }
 
     public function setInput(InputInterface $input): void

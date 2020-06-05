@@ -7,7 +7,6 @@
 
 namespace App;
 
-use App\Command\BaseCommand;
 use App\Command\ExportCommand;
 use App\Command\GenerateFixturesCommand;
 use App\Command\ImportCommand;
@@ -17,7 +16,6 @@ use App\Command\ShowStatusListCommand;
 use App\Command\UninstallCommand;
 use App\Command\VerifyCommand;
 use Dotenv\Dotenv;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -29,11 +27,6 @@ class Application extends \Symfony\Component\Console\Application
     {
         parent::__construct($name, $version);
         Dotenv::createImmutable(\dirname(__DIR__))->load();
-        $factory = new ServiceFactory();
-        $envConfig = new EnvConfig();
-        $envConfig->loadArray($_SERVER);
-        $envConfig->configureFactory($factory);
-        $this->container = new ServiceContainer($factory);
 
         if (\extension_loaded('xdebug')) {
             ini_set('xdebug.max_nesting_level', '100000');
@@ -45,17 +38,31 @@ class Application extends \Symfony\Component\Console\Application
         $this->container = $container;
     }
 
+    private function getContainer(): ServiceContainer
+    {
+        if (!isset($this->container)) {
+            $factory = new ServiceFactory();
+            $envConfig = new EnvConfig();
+            $envConfig->loadArray($_SERVER);
+            $envConfig->configureFactory($factory);
+            $this->container = new ServiceContainer($factory);
+        }
+
+        return $this->container;
+    }
+
     public function run(InputInterface $input = null, OutputInterface $output = null)
     {
+        $container = $this->getContainer();
         if (null === $input) {
-            $input = $this->container->getInput();
+            $input = $container->getInput();
         } else {
-            $this->container->setInput($input);
+            $container->setInput($input);
         }
         if (null === $output) {
-            $output = $this->container->getOutput();
+            $output = $container->getOutput();
         } else {
-            $this->container->setOutput($output);
+            $container->setOutput($output);
         }
 
         return parent::run($input, $output);
@@ -63,38 +70,19 @@ class Application extends \Symfony\Component\Console\Application
 
     protected function getDefaultCommands()
     {
-        $loop = $this->container->getEventLoop();
-        $entityManager = $this->container->getEntityManager();
+        $container = $this->getContainer();
+        $loop = $container->getEventLoop();
+        $entityManager = $container->getEntityManager();
 
         return array_merge(parent::getDefaultCommands(), [
             new InstallCommand($loop, $entityManager),
             new UninstallCommand($loop, $entityManager),
-            new VerifyCommand($loop, $entityManager, $this->container->getVerifierFactory()),
-            new ShowCommand($loop, $entityManager, $this->container->getThrottlingFactory()),
+            new VerifyCommand($loop, $entityManager, $container->getVerifierFactory()),
+            new ShowCommand($loop, $entityManager, $container->getThrottlingFactory()),
             new ShowStatusListCommand(),
             new ImportCommand($loop, $entityManager),
             new ExportCommand($loop, $entityManager),
-            new GenerateFixturesCommand($loop, $entityManager, $this->container->getEmailFixtures()),
+            new GenerateFixturesCommand($loop, $entityManager, $container->getEmailFixtures()),
         ]);
-    }
-
-    protected function doRunCommand(Command $command, InputInterface $input, OutputInterface $output)
-    {
-        if ($command instanceof BaseCommand) {
-            $this->container->setCommand($command);
-        }
-
-        return parent::doRunCommand($command, $input, $output);
-    }
-
-    /**
-     * @param string $name
-     * @param mixed  $default
-     *
-     * @return mixed
-     */
-    private function getEnvConfigValue(string $name, $default = null)
-    {
-        return $_SERVER[$name] ?? $default;
     }
 }
