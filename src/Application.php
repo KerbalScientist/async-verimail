@@ -16,6 +16,7 @@ use App\Command\ShowStatusListCommand;
 use App\Command\UninstallCommand;
 use App\Command\VerifyCommand;
 use Dotenv\Dotenv;
+use Exception;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -41,11 +42,17 @@ class Application extends \Symfony\Component\Console\Application
     private function getContainer(): ServiceContainer
     {
         if (!isset($this->container)) {
-            $factory = new ServiceFactory();
-            $envConfig = new EnvConfig();
-            $envConfig->loadArray($_SERVER);
-            $envConfig->configureFactory($factory);
-            $this->container = new ServiceContainer($factory);
+            try {
+                $factory = new ServiceFactory();
+                $envConfig = new EnvConfig();
+                $envConfig->loadArray($_SERVER);
+                $envConfig->configureFactory($factory);
+                $this->container = new ServiceContainer($factory);
+            } catch (Exception $e) {
+                $factory = new ServiceFactory();
+                $this->renderThrowable($e, $factory->createOutput(new ServiceContainer($factory)));
+                exit();
+            }
         }
 
         return $this->container;
