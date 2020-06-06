@@ -26,4 +26,11 @@ interface HydrationStrategyInterface
      * @return mixed[] DB row
      */
     public function dehydrate(object $entity): array;
+
+    /**
+     * Returns keys of dehydrated array.
+     *
+     * @return string[]
+     */
+    public function getRowFields(): array;
 }

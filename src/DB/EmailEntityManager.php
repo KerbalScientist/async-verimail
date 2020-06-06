@@ -23,8 +23,6 @@ use React\Promise\PromiseInterface;
 use React\Stream\ReadableStreamInterface;
 use ReflectionClass;
 use ReflectionProperty;
-use SplObjectStorage;
-use Throwable;
 use function App\pipeThrough;
 use function React\Promise\resolve;
 
@@ -183,48 +181,6 @@ class EmailEntityManager implements LoggerAwareInterface
     }
 
     /**
-     * @param string               $filename
-     * @param SelectInterface|null $query
-     *
-     * @return PromiseInterface
-     */
-    public function exportToCsvBlocking(string $filename, ?SelectInterface $query = null): PromiseInterface
-    {
-        $deferred = new Deferred();
-        $this->logger->info("Exporting emails to CSV file $filename.");
-        $f = null;
-        $f = fopen($filename, 'w');
-        $propertyNames = array_column($this->getDbProperties(), 'name');
-        fputcsv($f, $propertyNames);
-        if (null === $query) {
-            $query = $this->createSelectQuery();
-        }
-        $stream = $this->streamByQuery($query);
-        $stream->on('data', function (Email $email) use ($f) {
-            fputcsv($f, $this->hydrationStrategy->dehydrate($email));
-        });
-        $stream->on('close', function () use (&$f, $deferred) {
-            if ($f) {
-                fclose($f);
-                $f = null;
-            }
-            $this->logger->info('Export complete.');
-            $deferred->resolve();
-        });
-        $stream->on('error', function (Exception $e) use (&$f, $deferred) {
-            if ($f) {
-                fclose($f);
-                $f = null;
-            }
-            $this->logger->info('Export error.');
-            $this->logger->debug("$e");
-            $deferred->reject($e);
-        });
-
-        return $deferred->promise();
-    }
-
-    /**
      * Returns promise, which will be fulfilled by query rows count.
      *
      * Rows will be counted with respect to LIMIT and OFFSET, so for query
@@ -289,50 +245,6 @@ class EmailEntityManager implements LoggerAwareInterface
         }
 
         return $result;
-    }
-
-    /**
-     * @param string $filename
-     *
-     * @return PromiseInterface
-     */
-    public function importFromCsvBlocking(string $filename): PromiseInterface
-    {
-        $this->logger->info("Importing emails from CSV file $filename.");
-        $f = fopen($filename, 'r');
-        $propertyNames = fgetcsv($f);
-
-        $bufferSize = 500;
-        $buffer = new SplObjectStorage();
-        while ($row = fgetcsv($f)) {
-            try {
-                /** @noinspection PhpParamsInspection */
-                $promise = $this->persist(
-                    $this->hydrationStrategy->hydrate(
-                        array_combine($propertyNames, $row)));
-                $buffer->attach($promise);
-                if ($buffer->count() >= $bufferSize) {
-                    usleep(10);
-
-                    continue;
-                }
-                $promise->then(function () use ($promise, $buffer) {
-                    $buffer->detach($promise);
-                }, function ($error) use ($promise, $buffer) {
-                    $buffer->detach($promise);
-
-                    throw $error;
-                });
-            } catch (Throwable $e) {
-                $this->logger->error('Failed importing row '.json_encode($row, JSON_UNESCAPED_UNICODE));
-                $this->logger->debug("$e");
-            }
-        }
-        fclose($f);
-
-        return $this->flushPersist()->then(function () {
-            $this->logger->info('Import complete.');
-        });
     }
 
     /**

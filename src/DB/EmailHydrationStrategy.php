@@ -50,6 +50,25 @@ class EmailHydrationStrategy implements HydrationStrategyInterface
     }
 
     /**
+     * @return string[]
+     */
+    public function getRowFields(): array
+    {
+        if ($this->rowFields) {
+            return array_keys($this->rowFields);
+        }
+        $result = [];
+        foreach ($this->class->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+            if ($property->isStatic()) {
+                continue;
+            }
+            $result[] = $property->name;
+        }
+
+        return $result;
+    }
+
+    /**
      * {@inheritdoc}
      *
      * @throws Exception

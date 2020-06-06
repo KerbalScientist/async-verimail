@@ -7,6 +7,8 @@
 
 namespace App;
 
+use App\DB\CsvBlockingExporter;
+use App\DB\CsvBlockingImporter;
 use App\DB\EmailEntityManager;
 use App\Throttling\Factory as ThrottlingFactory;
 use App\Verifier\Factory as VerifierFactory;
@@ -29,6 +31,8 @@ class ServiceContainer
     private InputInterface $input;
     private OutputInterface $output;
     private ServiceFactory $factory;
+    private CsvBlockingImporter $importer;
+    private CsvBlockingExporter $exporter;
 
     public function __construct(ServiceFactory $factory)
     {
@@ -119,6 +123,24 @@ class ServiceContainer
         }
 
         return $this->throttlingFactory;
+    }
+
+    public function getImporter(): CsvBlockingImporter
+    {
+        if (!isset($this->importer)) {
+            $this->importer = $this->factory->createImporter($this);
+        }
+
+        return $this->importer;
+    }
+
+    public function getExporter(): CsvBlockingExporter
+    {
+        if (!isset($this->exporter)) {
+            $this->exporter = $this->factory->createExporter($this);
+        }
+
+        return $this->exporter;
     }
 
     public function setInput(InputInterface $input): void

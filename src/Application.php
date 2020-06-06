@@ -87,8 +87,8 @@ class Application extends \Symfony\Component\Console\Application
             new VerifyCommand($loop, $entityManager, $container->getVerifierFactory()),
             new ShowCommand($loop, $entityManager, $container->getThrottlingFactory()),
             new ShowStatusListCommand(),
-            new ImportCommand($loop, $entityManager),
-            new ExportCommand($loop, $entityManager),
+            new ImportCommand($loop, $entityManager, $container->getImporter()),
+            new ExportCommand($loop, $entityManager, $container->getExporter()),
             new GenerateFixturesCommand($loop, $entityManager, $container->getEmailFixtures()),
         ]);
     }

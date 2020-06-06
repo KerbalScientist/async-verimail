@@ -7,14 +7,19 @@
 
 namespace App;
 
+use App\DB\CsvBlockingExporter;
+use App\DB\CsvBlockingImporter;
 use App\DB\EmailEntityManager;
+use App\DB\EmailHydrationStrategy;
 use App\DB\MysqlQueryFactory;
+use App\Entity\Email;
 use App\Throttling\Factory as ThrottlingFactory;
 use App\Verifier\Factory as VerifierFactory;
 use Psr\Log\LoggerInterface;
 use React\MySQL\ConnectionInterface;
 use React\MySQL\Factory as MysqlFactory;
 use ReactPHP\MySQL\Decorator\BindAssocParamsConnectionDecorator;
+use ReflectionClass;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Logger\ConsoleLogger;
@@ -148,5 +153,28 @@ class ServiceFactory
     public function createThrottlingFactory(ServiceContainer $container): ThrottlingFactory
     {
         return new ThrottlingFactory($container->getEventLoop());
+    }
+
+    public function createImporter(ServiceContainer $container): CsvBlockingImporter
+    {
+        $importer = new CsvBlockingImporter($this->createEmailHydrationStrategy($container), $container->getEntityManager());
+        $importer->setLogger($container->getLogger());
+
+        return $importer;
+    }
+
+    public function createExporter(ServiceContainer $container): CsvBlockingExporter
+    {
+        $hydrationStrategy = $this->createEmailHydrationStrategy($container);
+        $exporter = new CsvBlockingExporter($hydrationStrategy);
+        $exporter->setLogger($container->getLogger());
+        $exporter->setHeaderRow($hydrationStrategy->getRowFields());
+
+        return $exporter;
+    }
+
+    public function createEmailHydrationStrategy(ServiceContainer $container): EmailHydrationStrategy
+    {
+        return new EmailHydrationStrategy(new ReflectionClass(Email::class));
     }
 }

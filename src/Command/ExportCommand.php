@@ -7,6 +7,9 @@
 
 namespace App\Command;
 
+use App\DB\CsvBlockingExporter;
+use App\DB\EmailEntityManager;
+use React\EventLoop\LoopInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -17,7 +20,15 @@ class ExportCommand extends BaseCommand
         configure as configureQuery;
     }
 
+    private CsvBlockingExporter $exporter;
+
     protected static $defaultName = 'export';
+
+    public function __construct(LoopInterface $eventLoop, EmailEntityManager $entityManager, CsvBlockingExporter $exporter)
+    {
+        parent::__construct($eventLoop, $entityManager);
+        $this->exporter = $exporter;
+    }
 
     protected function configure(): void
     {
@@ -34,8 +45,8 @@ class ExportCommand extends BaseCommand
     {
         $filename = $input->getArgument('filename');
         $this->setExecutePromise(
-            $this->entityManager
-                ->exportToCsvBlocking($filename, $this->emailSelectQuery)
+            $this->exporter
+                ->export($filename, $this->entityManager->streamByQuery($this->emailSelectQuery))
                 ->then(function () use ($output) {
                     $output->writeln('Export complete.');
                 })
