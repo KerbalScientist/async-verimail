@@ -42,11 +42,22 @@ interface EntityManagerInterface
     public function streamByQuery(SelectInterface $query): ReadableStreamInterface;
 
     /**
-     * @param Email $email
+     * Persists entity.
      *
-     * @return PromiseInterface
+     * @param object $entity
+     *
+     * @return PromiseInterface PromiseInterface<null,Throwable>
      */
-    public function persist(Email $email): PromiseInterface;
+    public function persist(object $entity): PromiseInterface;
+
+    /**
+     * Checks if instances of given class can be persisted by this entity manager.
+     *
+     * @param string $className
+     *
+     * @return bool
+     */
+    public function canPersistType(string $className): bool;
 
     public function createPersistingStream(): PersistingStreamInterface;
 

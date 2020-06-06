@@ -14,6 +14,7 @@ use Aura\SqlQuery\Common\SelectInterface;
 use Aura\SqlQuery\QueryInterface;
 use Exception;
 use InvalidArgumentException;
+use LogicException;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\NullLogger;
 use React\MySQL\ConnectionInterface;
@@ -24,6 +25,7 @@ use React\Stream\ReadableStreamInterface;
 use ReflectionClass;
 use ReflectionProperty;
 use function App\pipeThrough;
+use function React\Promise\reject;
 use function React\Promise\resolve;
 
 class EmailEntityManager implements LoggerAwareInterface, EntityManagerInterface
@@ -230,8 +232,22 @@ class EmailEntityManager implements LoggerAwareInterface, EntityManagerInterface
         return $result;
     }
 
-    public function persist(Email $email): PromiseInterface
+    /**
+     * {@inheritdoc}
+     */
+    public function canPersistType(string $className): bool
     {
+        return is_a($className, Email::class, true);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function persist(object $entity): PromiseInterface
+    {
+        if (!$entity instanceof Email) {
+            return reject(new LogicException('Only Email instances can be persisted.'));
+        }
         $deferred = new Deferred();
         if (!$this->persistingStream) {
             $this->persistingStream = $this->createPersistingStream();
@@ -252,7 +268,7 @@ class EmailEntityManager implements LoggerAwareInterface, EntityManagerInterface
         });
 
         try {
-            $stream->write($email);
+            $stream->write($entity);
         } catch (Exception $e) {
             $deferred->reject($e);
         }
