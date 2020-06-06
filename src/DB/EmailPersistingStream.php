@@ -83,9 +83,6 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
             ?? new EmailHydrationStrategy(new ReflectionClass(Email::class));
     }
 
-    /**
-     * @param int $insertBufferSize
-     */
     public function setInsertBufferSize(int $insertBufferSize): void
     {
         $this->flush();
@@ -141,8 +138,6 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
 
         return $query;
     }
-
-//    public function
 
     /**
      * @param QueryInterface $query
@@ -207,9 +202,6 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
             });
     }
 
-    /**
-     * @param int $updateBufferSize
-     */
     public function setUpdateBufferSize(int $updateBufferSize): void
     {
         $this->flush();

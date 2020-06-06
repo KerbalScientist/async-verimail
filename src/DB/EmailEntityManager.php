@@ -113,13 +113,7 @@ class EmailEntityManager implements LoggerAwareInterface
                 $query->bindValue($colName, (array) $value);
 
                 continue;
-            } elseif (
-                'LIKE' === $operator
-                || '>' === $operator
-                || '<' === $operator
-                || '<=' === $operator
-                || '>=' === $operator
-            ) {
+            } elseif (\in_array($operator, ['LIKE', '>', '<', '<=', '>='], true)) {
                 $query->where(
                     $this->sqlNegate("$colName $operator :$colName", $negate));
                 $query->bindValue($colName, (string) $value);
