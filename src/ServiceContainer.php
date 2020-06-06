@@ -22,7 +22,6 @@ class ServiceContainer
     private LoggerInterface $logger;
     private LoopInterface $eventLoop;
     private EmailEntityManager $entityManager;
-    private string $hostsConfigFile;
     private ConnectionInterface $readDbConnection;
     private ConnectionInterface $writeConnection;
     private VerifierFactory $verifierFactory;
@@ -34,7 +33,6 @@ class ServiceContainer
     public function __construct(ServiceFactory $factory)
     {
         $this->factory = $factory;
-        $this->hostsConfigFile = \dirname(__DIR__).'/config/hosts.yaml';
     }
 
     public function getReadDbConnection(): ConnectionInterface
