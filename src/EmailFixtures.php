@@ -7,8 +7,8 @@
 
 namespace App;
 
-use App\DB\EmailEntityManager;
-use App\DB\EmailPersistingStream;
+use App\DB\EntityManagerInterface;
+use App\DB\PersistingStreamInterface;
 use App\Entity\Email;
 use React\EventLoop\LoopInterface;
 use React\Promise\Deferred;
@@ -41,10 +41,10 @@ class EmailFixtures
     private int $minUserLength = 4;
     private int $maxUserLength = 10;
     private string $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    private EmailPersistingStream $persistingStream;
+    private PersistingStreamInterface $persistingStream;
     private LoopInterface $loop;
 
-    public function __construct(EmailEntityManager $entityManager, LoopInterface $loop)
+    public function __construct(EntityManagerInterface $entityManager, LoopInterface $loop)
     {
         $this->persistingStream = $entityManager->createPersistingStream();
         $this->persistingStream->setInsertBufferSize(self::BUFFER_SIZE);

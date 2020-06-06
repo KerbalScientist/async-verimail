@@ -7,7 +7,7 @@
 
 namespace App\Command;
 
-use App\DB\EmailEntityManager;
+use App\DB\EntityManagerInterface;
 use App\Entity\Email;
 use App\Stream\ReadableStreamWrapperTrait;
 use App\Throttling\Factory as ThrottlingFactory;
@@ -30,7 +30,7 @@ class ShowCommand extends BaseCommand
 
     public function __construct(
         LoopInterface $eventLoop,
-        EmailEntityManager $entityManager,
+        EntityManagerInterface $entityManager,
         ThrottlingFactory $throttlingFactory
     ) {
         parent::__construct($eventLoop, $entityManager);

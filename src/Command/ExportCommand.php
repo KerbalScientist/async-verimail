@@ -8,7 +8,7 @@
 namespace App\Command;
 
 use App\DB\CsvBlockingExporter;
-use App\DB\EmailEntityManager;
+use App\DB\EntityManagerInterface;
 use React\EventLoop\LoopInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -24,7 +24,7 @@ class ExportCommand extends BaseCommand
 
     protected static $defaultName = 'export';
 
-    public function __construct(LoopInterface $eventLoop, EmailEntityManager $entityManager, CsvBlockingExporter $exporter)
+    public function __construct(LoopInterface $eventLoop, EntityManagerInterface $entityManager, CsvBlockingExporter $exporter)
     {
         parent::__construct($eventLoop, $entityManager);
         $this->exporter = $exporter;

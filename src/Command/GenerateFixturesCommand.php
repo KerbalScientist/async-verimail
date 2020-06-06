@@ -7,7 +7,7 @@
 
 namespace App\Command;
 
-use App\DB\EmailEntityManager;
+use App\DB\EntityManagerInterface;
 use App\EmailFixtures;
 use React\EventLoop\LoopInterface;
 use Symfony\Component\Console\Input\InputArgument;
@@ -20,7 +20,7 @@ class GenerateFixturesCommand extends BaseCommand
 
     private EmailFixtures $emailFixtures;
 
-    public function __construct(LoopInterface $eventLoop, EmailEntityManager $entityManager, EmailFixtures $emailFixtures)
+    public function __construct(LoopInterface $eventLoop, EntityManagerInterface $entityManager, EmailFixtures $emailFixtures)
     {
         parent::__construct($eventLoop, $entityManager);
         $this->emailFixtures = $emailFixtures;

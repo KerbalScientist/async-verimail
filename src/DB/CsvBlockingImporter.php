@@ -18,9 +18,9 @@ class CsvBlockingImporter implements LoggerAwareInterface
     use \Psr\Log\LoggerAwareTrait;
 
     private HydrationStrategyInterface $hydrationStrategy;
-    private EmailEntityManager $entityManager;
+    private EntityManagerInterface $entityManager;
 
-    public function __construct(HydrationStrategyInterface $hydrationStrategy, EmailEntityManager $entityManager)
+    public function __construct(HydrationStrategyInterface $hydrationStrategy, EntityManagerInterface $entityManager)
     {
         $this->hydrationStrategy = $hydrationStrategy;
         $this->entityManager = $entityManager;

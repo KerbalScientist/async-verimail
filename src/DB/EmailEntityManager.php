@@ -26,7 +26,7 @@ use ReflectionProperty;
 use function App\pipeThrough;
 use function React\Promise\resolve;
 
-class EmailEntityManager implements LoggerAwareInterface
+class EmailEntityManager implements LoggerAwareInterface, EntityManagerInterface
 {
     use LoggerAwareTrait;
 
@@ -37,7 +37,7 @@ class EmailEntityManager implements LoggerAwareInterface
     private ConnectionInterface $writeConnection;
     private MysqlQueryFactory $queryFactory;
     private HydrationStrategyInterface $hydrationStrategy;
-    private ?EmailPersistingStream $persistingStream = null;
+    private ?PersistingStreamInterface $persistingStream = null;
 
     /**
      * EmailEntityManager constructor.
@@ -180,16 +180,6 @@ class EmailEntityManager implements LoggerAwareInterface
         return $this->readConnection->query($sql);
     }
 
-    /**
-     * Returns promise, which will be fulfilled by query rows count.
-     *
-     * Rows will be counted with respect to LIMIT and OFFSET, so for query
-     *  with LIMIT 100 it will always return 100 if total count of matching rows is more than 100.
-     *
-     * @param SelectInterface $query
-     *
-     * @return PromiseInterface PromiseInterface<int, Exception>
-     */
     public function countByQuery(SelectInterface $query): PromiseInterface
     {
         $sql = "SELECT count(*) FROM ({$query->getStatement()}) t";
@@ -203,13 +193,6 @@ class EmailEntityManager implements LoggerAwareInterface
             });
     }
 
-    /**
-     * Creates stream of Email entities, selected by $query.
-     *
-     * @param SelectInterface $query
-     *
-     * @return ReadableStreamInterface readable stream of Email entities
-     */
     public function streamByQuery(SelectInterface $query): ReadableStreamInterface
     {
         $sql = $query->getStatement();
@@ -247,11 +230,6 @@ class EmailEntityManager implements LoggerAwareInterface
         return $result;
     }
 
-    /**
-     * @param Email $email
-     *
-     * @return PromiseInterface
-     */
     public function persist(Email $email): PromiseInterface
     {
         $deferred = new Deferred();
@@ -282,7 +260,7 @@ class EmailEntityManager implements LoggerAwareInterface
         return $deferred->promise();
     }
 
-    public function createPersistingStream(): EmailPersistingStream
+    public function createPersistingStream(): PersistingStreamInterface
     {
         $stream = new EmailPersistingStream(
             $this->writeConnection,

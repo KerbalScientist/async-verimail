@@ -22,7 +22,7 @@ use ReflectionClass;
 use function React\Promise\all;
 use function React\Promise\resolve;
 
-class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInterface
+class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInterface, PersistingStreamInterface
 {
     use EventEmitterTrait;
     use LoggerAwareTrait;
@@ -208,9 +208,6 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
         $this->updateBufferSize = $updateBufferSize;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function end($data = null)
     {
         if (!\is_null($data)) {
@@ -219,9 +216,6 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
         $this->close();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function write($data)
     {
         if (!$this->isWritable()) {
@@ -254,17 +248,11 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
         return true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isWritable()
     {
         return !$this->closed;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function close()
     {
         if ($this->closed) {

@@ -8,7 +8,7 @@
 namespace App\Command;
 
 use App\DB\CsvBlockingImporter;
-use App\DB\EmailEntityManager;
+use App\DB\EntityManagerInterface;
 use React\EventLoop\LoopInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,7 +20,7 @@ class ImportCommand extends BaseCommand
 
     private CsvBlockingImporter $importer;
 
-    public function __construct(LoopInterface $eventLoop, EmailEntityManager $entityManager, CsvBlockingImporter $importer)
+    public function __construct(LoopInterface $eventLoop, EntityManagerInterface $entityManager, CsvBlockingImporter $importer)
     {
         parent::__construct($eventLoop, $entityManager);
         $this->importer = $importer;

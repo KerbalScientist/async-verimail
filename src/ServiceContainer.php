@@ -9,7 +9,7 @@ namespace App;
 
 use App\DB\CsvBlockingExporter;
 use App\DB\CsvBlockingImporter;
-use App\DB\EmailEntityManager;
+use App\DB\EntityManagerInterface;
 use App\Throttling\Factory as ThrottlingFactory;
 use App\Verifier\Factory as VerifierFactory;
 use Psr\Log\LoggerInterface;
@@ -23,7 +23,7 @@ class ServiceContainer
 {
     private LoggerInterface $logger;
     private LoopInterface $eventLoop;
-    private EmailEntityManager $entityManager;
+    private EntityManagerInterface $entityManager;
     private ConnectionInterface $readDbConnection;
     private ConnectionInterface $writeConnection;
     private VerifierFactory $verifierFactory;
@@ -98,7 +98,7 @@ class ServiceContainer
         return $this->logger;
     }
 
-    public function getEntityManager(): EmailEntityManager
+    public function getEntityManager(): EntityManagerInterface
     {
         if (!isset($this->entityManager)) {
             $this->entityManager = $this->factory->createEntityManager($this);

@@ -7,7 +7,7 @@
 
 namespace App\Command;
 
-use App\DB\EmailEntityManager;
+use App\DB\EntityManagerInterface;
 use App\ServiceContainer;
 use React\EventLoop\LoopInterface;
 use Symfony\Component\Console\Command\Command;
@@ -20,15 +20,15 @@ abstract class BaseCommand extends Command
     use ReactCommandTrait;
 
     private ServiceContainer $container;
-    protected EmailEntityManager $entityManager;
+    protected EntityManagerInterface $entityManager;
 
     /**
      * BaseCommand constructor.
      *
-     * @param LoopInterface      $eventLoop
-     * @param EmailEntityManager $entityManager
+     * @param LoopInterface          $eventLoop
+     * @param EntityManagerInterface $entityManager
      */
-    public function __construct(LoopInterface $eventLoop, EmailEntityManager $entityManager)
+    public function __construct(LoopInterface $eventLoop, EntityManagerInterface $entityManager)
     {
         $this->initReactCommand($eventLoop);
         $this->entityManager = $entityManager;

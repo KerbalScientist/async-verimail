@@ -11,6 +11,7 @@ use App\DB\CsvBlockingExporter;
 use App\DB\CsvBlockingImporter;
 use App\DB\EmailEntityManager;
 use App\DB\EmailHydrationStrategy;
+use App\DB\EntityManagerInterface;
 use App\DB\MysqlQueryFactory;
 use App\Entity\Email;
 use App\Throttling\Factory as ThrottlingFactory;
@@ -125,7 +126,7 @@ class ServiceFactory
         );
     }
 
-    public function createEntityManager(ServiceContainer $container): EmailEntityManager
+    public function createEntityManager(ServiceContainer $container): EntityManagerInterface
     {
         $entityManager = new EmailEntityManager(
             $this->dbEmailTableName,

@@ -7,7 +7,7 @@
 
 namespace App\Command;
 
-use App\DB\EmailEntityManager;
+use App\DB\EntityManagerInterface;
 use App\Entity\Email;
 use App\MovingAverage;
 use App\Verifier\Factory as VerifierFactory;
@@ -42,7 +42,7 @@ class VerifyCommand extends BaseCommand
     private int $verifiedCount;
     private VerifierFactory $verifierFactory;
 
-    public function __construct(LoopInterface $eventLoop, EmailEntityManager $entityManager, VerifierFactory $verifierFactory)
+    public function __construct(LoopInterface $eventLoop, EntityManagerInterface $entityManager, VerifierFactory $verifierFactory)
     {
         parent::__construct($eventLoop, $entityManager);
         $this->verifierFactory = $verifierFactory;
