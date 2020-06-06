@@ -16,6 +16,8 @@ use React\Promise\PromiseInterface;
 
 class EmailFixtures
 {
+    private const BUFFER_SIZE = 5000;
+
     /**
      * @var int[]
      */
@@ -45,8 +47,8 @@ class EmailFixtures
     public function __construct(EmailEntityManager $entityManager, LoopInterface $loop)
     {
         $this->persistingStream = $entityManager->createPersistingStream();
-        $this->persistingStream->setInsertBufferSize(5000);
-        $this->persistingStream->setUpdateBufferSize(5000);
+        $this->persistingStream->setInsertBufferSize(self::BUFFER_SIZE);
+        $this->persistingStream->setUpdateBufferSize(self::BUFFER_SIZE);
         $this->loop = $loop;
     }
 
