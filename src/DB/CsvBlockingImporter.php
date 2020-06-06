@@ -66,7 +66,7 @@ class CsvBlockingImporter implements LoggerAwareInterface
         }
         fclose($f);
 
-        return $this->entityManager->flushPersist()
+        return $this->entityManager->flush()
             ->then(function () {
                 $this->logger->info('Import complete.');
             });

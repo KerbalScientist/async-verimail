@@ -297,7 +297,7 @@ class EmailEntityManager implements LoggerAwareInterface
         return $stream;
     }
 
-    public function flushPersist(): PromiseInterface
+    public function flush(): PromiseInterface
     {
         if ($this->persistingStream) {
             return $this->persistingStream->flush();
@@ -308,6 +308,6 @@ class EmailEntityManager implements LoggerAwareInterface
 
     public function __destruct()
     {
-        $this->flushPersist();
+        $this->flush();
     }
 }
