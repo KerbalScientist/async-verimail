@@ -64,13 +64,17 @@ class EnvConfig implements ConfigurationInterface
                   ->scalarNode('DB_SCHEMA')->end()
                   ->scalarNode('MAX_CONCURRENT')
                       ->validate()
-                          ->ifTrue(fn ($val) => !is_numeric($val))
-                          ->thenInvalid('Environment variable MAX_CONCURRENT should be numeric.')->end()
+                          ->ifTrue(fn ($val) => !is_numeric($val) || \intval($val) < 1)
+                              ->thenInvalid('Environment variable MAX_CONCURRENT should be a string representation'.
+                                  ' of integer value greater than 0.')
+                          ->end()
                       ->end()
                   ->scalarNode('CONNECT_TIMEOUT')
                       ->validate()
-                          ->ifTrue(fn ($val) => !is_numeric($val))
-                          ->thenInvalid('Environment variable CONNECT_TIMEOUT should be numeric.')->end()
+                          ->ifTrue(fn ($val) => !is_numeric($val) || \floatval($val) < 0)
+                              ->thenInvalid('Environment variable CONNECT_TIMEOUT should be a string representation'.
+                                  ' of non-negative float value.')
+                          ->end()
                       ->end()
             ->end();
 
