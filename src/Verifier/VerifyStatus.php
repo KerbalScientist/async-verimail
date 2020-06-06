@@ -10,8 +10,7 @@ namespace App\Verifier;
 use InvalidArgumentException;
 
 /**
- * Class EmailVerifyStatus.
- *
+ * Represents email verification result.
  *
  * @method static VerifyStatus UNKNOWN()
  * @method static VerifyStatus INVALID()
