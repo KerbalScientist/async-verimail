@@ -11,6 +11,7 @@ use App\MutexRun\CallableOnce;
 use App\Tests\TestCase;
 use Exception;
 use React\Promise\Deferred;
+use function React\Promise\reject;
 use function React\Promise\resolve;
 
 class CallableOnceTest extends TestCase
@@ -56,6 +57,18 @@ class CallableOnceTest extends TestCase
     public function testCallbackRunsOnEveryInvokeWhenAllowAfterResolveSet()
     {
         $callable = new CallableOnce($this->expectCallableExactly(3), true);
+        $callable->__invoke();
+        $callable->__invoke();
+        $callable->__invoke();
+    }
+
+    public function testCallbackRunsOnEveryInvokeIfItReturnsRejectedPromiseWhenAllowAfterResolveSet()
+    {
+        $callableMock = $this->expectCallableExactly(3);
+        $callable = new CallableOnce(function () use ($callableMock) {
+            $callableMock->__invoke();
+            return reject();
+        }, true);
         $callable->__invoke();
         $callable->__invoke();
         $callable->__invoke();
