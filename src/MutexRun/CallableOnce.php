@@ -40,10 +40,12 @@ class CallableOnce
         if ($this->lock) {
             return $this->lock;
         }
+
         try {
             $result = ($this->callable)(...$args);
         } catch (Exception $exception) {
             $this->lock = reject($exception);
+
             return $this->lock;
         }
         if (!$result instanceof PromiseInterface) {
