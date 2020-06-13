@@ -84,4 +84,13 @@ class CallableOnceTest extends TestCase
         $callable->__invoke();
     }
 
+    public function testPromiseRejectsWithExceptionThrownByCallback()
+    {
+        $exception = new Exception();
+        $callable = new CallableOnce(function () use ($exception) {
+            throw $exception;
+        });
+        $callable->__invoke()->then($this->expectCallableNever(), $this->expectCallableOnceWith($exception));
+    }
+
 }
