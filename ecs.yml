@@ -14,6 +14,7 @@ parameters:
     - 'symfony'
   skip:
     PhpCsFixer\Fixer\Phpdoc\PhpdocVarWithoutNameFixer: ~
+    PhpCsFixer\Fixer\Phpdoc\PhpdocNoEmptyReturnFixer: ~
     PhpCsFixer\Fixer\PhpTag\BlankLineAfterOpeningTagFixer: ~
   paths:
     - 'src'

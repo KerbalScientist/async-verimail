@@ -53,7 +53,15 @@ class LevelFilteringLogger extends AbstractLogger implements LoggerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Logs with an arbitrary level.
+     *
+     * @param mixed   $level
+     * @param string  $message
+     * @param mixed[] $context
+     *
+     * @return void
+     *
+     * @throws \Psr\Log\InvalidArgumentException
      */
     public function log($level, $message, array $context = array())
     {
