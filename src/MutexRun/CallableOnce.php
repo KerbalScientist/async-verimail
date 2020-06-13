@@ -44,9 +44,7 @@ class CallableOnce
         try {
             $result = ($this->callable)(...$args);
         } catch (Exception $exception) {
-            $this->lock = reject($exception);
-
-            return $this->lock;
+            $result = reject($exception);
         }
         if (!$result instanceof PromiseInterface) {
             $result = resolve($result);
@@ -60,10 +58,11 @@ class CallableOnce
             $this->lock = null;
 
             return $result;
-        }, function (Throwable $e) {
+        }, function ($e) {
             $this->lock = null;
-
-            throw $e;
+            if ($e instanceof Throwable) {
+                throw $e;
+            }
         });
     }
 }
