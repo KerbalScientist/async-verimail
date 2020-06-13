@@ -7,8 +7,10 @@
 
 namespace App\MutexRun;
 
+use Exception;
 use React\Promise\PromiseInterface;
 use Throwable;
+use function React\Promise\reject;
 use function React\Promise\resolve;
 
 class CallableOnce
@@ -38,7 +40,12 @@ class CallableOnce
         if ($this->lock) {
             return $this->lock;
         }
-        $result = ($this->callable)(...$args);
+        try {
+            $result = ($this->callable)(...$args);
+        } catch (Exception $exception) {
+            $this->lock = reject($exception);
+            return $this->lock;
+        }
         if (!$result instanceof PromiseInterface) {
             $result = resolve($result);
         }
