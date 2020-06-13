@@ -9,7 +9,7 @@ namespace App\Command;
 
 use Evenement\EventEmitterTrait;
 use Exception;
-use http\Exception\RuntimeException;
+use RuntimeException;
 use LogicException;
 use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
