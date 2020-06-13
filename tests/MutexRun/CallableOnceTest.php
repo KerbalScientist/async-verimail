@@ -74,6 +74,16 @@ class CallableOnceTest extends TestCase
         $callable->__invoke();
     }
 
+    public function testPromiseIsRejectedWithSameExceptionWhenAllowAfterResolveSet()
+    {
+        $exception = new Exception();
+        $callable = new CallableOnce(function () use ($exception) {
+            return reject($exception);
+        }, true);
+        $callable->__invoke()->then($this->expectCallableNever(),
+            $this->expectCallableOnceWith($exception));
+    }
+
     public function testPromisesAreResolvedWithValuesReturnedByCallbackWhenAllowAfterResolveSet()
     {
         $value1 = 'value1';
