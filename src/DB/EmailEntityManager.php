@@ -169,7 +169,7 @@ class EmailEntityManager implements LoggerAwareInterface, EntityManagerInterface
                 KEY status(status)
             )
         ";
-        $this->logger->debugQuery($sql);
+        $this->logger->query($sql);
 
         return $this->readConnection->query($sql);
     }
@@ -177,7 +177,7 @@ class EmailEntityManager implements LoggerAwareInterface, EntityManagerInterface
     public function uninstallSchema(): PromiseInterface
     {
         $sql = "DROP TABLE `$this->tableName`";
-        $this->logger->debugQuery($sql);
+        $this->logger->query($sql);
 
         return $this->readConnection->query($sql);
     }
@@ -186,7 +186,7 @@ class EmailEntityManager implements LoggerAwareInterface, EntityManagerInterface
     {
         $sql = "SELECT count(*) FROM ({$query->getStatement()}) t";
         $bind = $this->getBindValues($query);
-        $this->logger->debugQuery($sql, $bind);
+        $this->logger->query($sql, $bind);
 
         return $this->readConnection
             ->query($sql, $bind)
@@ -199,7 +199,7 @@ class EmailEntityManager implements LoggerAwareInterface, EntityManagerInterface
     {
         $sql = $query->getStatement();
         $params = $this->getBindValues($query);
-        $this->logger->debugQuery($sql, $params);
+        $this->logger->query($sql, $params);
         $result = new ThroughStream(function ($data) {
             return $this->hydrationStrategy->hydrate($data);
         });

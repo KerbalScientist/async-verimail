@@ -110,7 +110,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
         $this->updateBuffer = [];
         $params = $this->getBindValues($query);
         $sql = $query->getStatement();
-        $this->logger->debugQuery($sql, $params);
+        $this->logger->query($sql, $params);
 
         return $this->connection->query($sql, $params)->then(function () {
             $this->bufferIsFull = false;
@@ -175,7 +175,7 @@ class EmailPersistingStream implements WritableStreamInterface, LoggerAwareInter
         $this->insertBuffer = [];
         $params = $this->getBindValues($query);
         $sql = $query->getStatement();
-        $this->logger->debugQuery($sql, $params);
+        $this->logger->query($sql, $params);
         /*
          * @var $result QueryResult
          */

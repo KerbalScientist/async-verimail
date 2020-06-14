@@ -13,10 +13,12 @@ use Psr\Log\LogLevel;
 class Logger implements LoggerInterface
 {
     private LoggerInterface $innerLogger;
+    private string $level;
 
-    public function __construct(LoggerInterface $innerLogger)
+    public function __construct(LoggerInterface $innerLogger, string $level = LogLevel::INFO)
     {
         $this->innerLogger = $innerLogger;
+        $this->level = $level;
     }
 
     /**
@@ -139,10 +141,10 @@ class Logger implements LoggerInterface
      * @param string  $append
      * @param mixed[] $context
      */
-    public function debugQuery(string $sql, array $bindValues = [], string $append = '', array $context = array()): void
+    public function query(string $sql, array $bindValues = [], string $append = '', array $context = array()): void
     {
         $this->innerLogger->log(
-            LogLevel::DEBUG,
+            $this->level,
             "Query:\n$sql\n".
             'Bind: '.json_encode($bindValues, JSON_UNESCAPED_UNICODE)."\n  ".
             $append, $context);
