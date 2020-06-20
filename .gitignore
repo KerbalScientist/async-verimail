@@ -22,3 +22,6 @@
 /data
 !/data/.gitkeep
 *.todo
+
+# docker
+/docker-compose.yml
